@@ -17,6 +17,10 @@ export function setGuestDestination(guest: Guest, coords: CoordsXY) {
     guest.destination = coords;
 }
 
+export function setGuestDirection(guest: Guest, direction: Direction) {
+    guest.direction = direction;
+}
+
 export function getGuestsOnNeighbouringTile(origin: CoordsXYZD) {
     /*
      ** 0 is the direction facing map edge spanning ((1, maxY), (1, 1))

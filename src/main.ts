@@ -42,7 +42,7 @@ function onActionExecuted(stallPingScheduler: StallPingScheduler, e: GameActionE
 function cleanup(db: GuestDb, rubbish: number[]) {
     if (rubbish.length < 1) return;
     log.warn(`deleting invalid IDs found in db (${rubbish})`);
-    for (let id of rubbish) {
+    for (const id of rubbish) {
         delete db[id];
     }
 }
@@ -77,7 +77,7 @@ export function main() {
     //const entityIds = parkStorage.getAll("tassaron.food-prefs.entity");
     const db: GuestDb = {};
     const currentGuests = map.getAllEntities("guest");
-    for (let guest of currentGuests) {
+    for (const guest of currentGuests) {
         if (guest.id != null) {
             const favouriteGender = createFavouriteFood(foodAvailable);
             db[guest.id] = favouriteGender;
@@ -89,9 +89,9 @@ export function main() {
     //context.registerAction("guestsetdestination", querySetGuestDestination, executeSetGuestDestination);
 
     context.subscribe("guest.generation", (e: GuestGenerationArgs) => onPeepSpawn(db, foodAvailable, e));
-    const stallPingScheduler = new StallPingScheduler(db, 120);
+    const stallPingScheduler = new StallPingScheduler(120);
     context.subscribe("interval.day", () => {
-        stallPingScheduler.newDay();
+        stallPingScheduler.newDay(db);
     });
     context.subscribe("action.execute", (e: GameActionEventArgs) => onActionExecuted(stallPingScheduler, e));
 

@@ -50,7 +50,7 @@ This project supports the [OpenRCT2 hot reload feature](https://github.com/OpenR
 2. Enable hot reload by setting `enable_hot_reloading = true` in `config.ini`.
 3. Run `npm start` in the directory of this project to start the hot reload server.
 4. Start the OpenRCT2 and load a save or start a new game.
-5. Each time you save any of the files in `./src/`, the server will compile `./src/registerPlugin.ts` and place compiled plugin file inside your local OpenRCT2 plugin directory.
+5. Each time you save any of the files in `./src/`, the server will compile `./src/plugin.ts` and place the compiled plugin file inside your local OpenRCT2 plugin directory.
 6. OpenRCT2 will notice file changes and it will reload the plugin.
 
 ### Why do minor variables use a random word instead of something idiomatic like `i`?
