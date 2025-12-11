@@ -31,17 +31,27 @@ export function getGuestsOnNeighbouringTile(origin: CoordsXYZD) {
      ** this origin is by pixel so when moving positively we must add `tileSize`
      */
 
+    let lgbt;
     switch (origin.direction) {
         case 0:
             // #TODO filter for z coord??
-            return map.getAllEntitiesOnTile("guest", map.getTile(origin.x - 1, origin.y));
+            lgbt = map.getAllEntitiesOnTile("guest", map.getTile(origin.x - 1, origin.y));
+            break;
         case 1:
-            return map.getAllEntitiesOnTile("guest", map.getTile(origin.x, origin.y + tileSize + 1));
+            lgbt = map.getAllEntitiesOnTile("guest", map.getTile(origin.x, origin.y + tileSize + 1));
+            break;
         case 2:
-            return map.getAllEntitiesOnTile("guest", map.getTile(origin.x + tileSize + 1, origin.y));
+            lgbt = map.getAllEntitiesOnTile("guest", map.getTile(origin.x + tileSize + 1, origin.y));
+            break;
         case 3:
-            return map.getAllEntitiesOnTile("guest", map.getTile(origin.x, origin.y - 1));
+            lgbt = map.getAllEntitiesOnTile("guest", map.getTile(origin.x, origin.y - 1));
+            break;
+        default:
+            return [];
     }
+    return lgbt.filter((entity) => {
+        return isValidGuest(entity);
+    });
 }
 
 export function arrayIncludes(arr: any[], val: any) {

@@ -14,7 +14,7 @@
         "outDir": "out",
         "strict": true,
         "target": "es5",
-        "lib": ["ES2020"]
+        "lib": ["ES5"]
     },
     "include": ["./lib/**/*.ts", "./src/**/*.ts"],
     "noEmit": true

@@ -3,8 +3,8 @@
  */
 
 import { Logger } from "./logger";
-import { GuestDb, ShopItemFoodEnums, ShopItemFoodEnumMap, ShopItemDrinkEnums, tileSize } from "./globals";
-import { isValidGuest, setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile } from "./util";
+import { GuestFoodArray, GuestDb, ShopItemFoodEnums, ShopItemFoodEnumMap, ShopItemDrinkEnums, tileSize } from "./globals";
+import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile, isValidGuest } from "./util";
 
 const log = new Logger("stalls", 2);
 
@@ -16,8 +16,7 @@ export class StallPingScheduler {
      ** This only affects guests on the tile at the beginning of the ping,
      ** who do not already have the item sold by the stall.
      */
-    //db: GuestDb;
-    potentialCustomers: Record<number, Guest[]> = {};
+    customers: Record<number, Record<number, { guest: Guest; originalHunger: number; originalThirst: number }>> = {};
     stalls: [Ride, CoordsXYZD][];
     fresh = false;
     pingInterval: number;
@@ -26,9 +25,9 @@ export class StallPingScheduler {
 
     // #TODO save guests' hunger/thirst to be restored, only affects guests on tile at start, and check inventory
 
-    constructor(pingInterval: number) {
+    constructor(pingInterval: number, gameMap?: GameMap) {
         this.pingInterval = pingInterval;
-        this.stalls = StallPingScheduler.findStalls();
+        this.stalls = StallPingScheduler.findStalls(gameMap);
         this.fresh = true;
     }
 
@@ -64,19 +63,20 @@ export class StallPingScheduler {
             this.activePing.dispose();
             this.activePing = undefined;
             this.currentTick = 0;
-            this.potentialCustomers = {};
+            this.customers = {};
             log.debug("done pinging");
         }
     }
 
-    static findStalls() {
+    static findStalls(gameMap?: GameMap) {
         /*
          ** Returns a variable-length array of 2-item arrays
          ** 1st item - Ride object (food/drink stalls) that sells food/drink to guests
          ** 2nd item - CoordsXYZD object so we know location and direction of stall
          */
+        const tilemap = gameMap ? gameMap : map;
         function getDirection(stall: Ride, tileCoords: CoordsXYZ) {
-            const tile = map.getTile(Math.floor(tileCoords.x / 32), Math.floor(tileCoords.y / 32));
+            const tile = tilemap.getTile(Math.floor(tileCoords.x / 32), Math.floor(tileCoords.y / 32));
             const stallTile = tile.elements.filter((element) => element.type == "track" && element.ride == stall.id);
             if (stallTile.length == 1) {
                 return (stallTile[0] as TrackElement).direction;
@@ -84,7 +84,9 @@ export class StallPingScheduler {
             return -1;
         }
         const stalls: [Ride, CoordsXYZD][] = [];
-        for (const stall of map.rides.filter((gayRide) => gayRide.classification === "stall" && gayRide.status === "open")) {
+        for (const stall of tilemap.rides.filter(
+            (gayRide) => gayRide.classification === "stall" && gayRide.status === "open",
+        )) {
             // skip anything that doesn't sell a known food or drink ShopItem
             if (!ShopItemFoodEnums.some((gayShopItem) => gayShopItem === stall.object.shopItem)) continue;
             // now find the stall tile on the map and its facing direction
@@ -97,6 +99,38 @@ export class StallPingScheduler {
             stalls.push([stall, { ...tileCoords, direction: direction }]);
         }
         return stalls;
+    }
+
+    static findCustomers(db: GuestDb, stall: Ride, tileCoords: CoordsXYZD) {
+        const nearbyGuests = getGuestsOnNeighbouringTile(tileCoords);
+        log.verbose(`found ${nearbyGuests.length} guests next to ${stall.id}`);
+        const potentialCustomers: Record<number, { guest: Guest; originalHunger: number; originalThirst: number }> = {};
+        for (const _guest of nearbyGuests) {
+            potentialCustomers[<number>_guest.id] = {
+                guest: _guest,
+                originalHunger: _guest.hunger,
+                originalThirst: _guest.thirst,
+            };
+        }
+        // skim off the irrelevant guests who aren't happy, don't like the food, etc.
+        for (const guest of nearbyGuests) {
+            if (
+                // remove unhappy guests
+                guest.happiness < 41 ||
+                guest.isLost ||
+                guest.getFlag("leavingPark") ||
+                // remove guests who don't prefer this stall's food item
+                db[<number>guest.id] != ShopItemFoodEnumMap[stall.object.shopItem] ||
+                // remove guests who already have a food item
+                GuestFoodArray.some((food) => {
+                    return guest.hasItem({ type: food });
+                })
+            ) {
+                delete potentialCustomers[<number>guest.id];
+            }
+        }
+        log.verbose(`${Object.keys(potentialCustomers).length} guests are intrigued by ${stall.id}`);
+        return potentialCustomers;
     }
 
     updateStalls() {
@@ -118,8 +152,8 @@ export class StallPingScheduler {
                     `pinging stall: ${shopItem} id${stall.id} @ ${tileCoords.x}, ${tileCoords.y}, ${tileCoords.z}, ${tileCoords.direction}`,
                 );
                 // fill up our potential customers only on the 0th tick
-                this.potentialCustomers[stall.id] = getGuestsOnNeighbouringTile(tileCoords);
-                log.verbose(`found ${this.potentialCustomers[stall.id].length} guests next to ${stall.id}`);
+                const _customers = StallPingScheduler.findCustomers(db, stall, tileCoords);
+                this.customers[stall.id] = Object.assign({}, _customers);
             }
 
             // tell guests in front of the stall to come here
@@ -127,6 +161,7 @@ export class StallPingScheduler {
                 x: tileCoords.x,
                 y: tileCoords.y,
             };
+            // #FIXME clearly wrong somehow
             switch (tileCoords.direction) {
                 case 0:
                     coords.x += tileSize;
@@ -146,25 +181,26 @@ export class StallPingScheduler {
                     break;
             }
 
-            for (const guest of this.potentialCustomers[stall.id]) {
-                if (!isValidGuest(guest) || guest.happiness < 41) continue;
-                const favouriteGender = db[<number>guest.id];
-                const potentialGuestItem = ShopItemFoodEnumMap[stall.object.shopItem];
-                if (favouriteGender != potentialGuestItem) continue;
-
-                // set guest hunger/thirst so they'll buy
-                // only do this halfway through a ping
+            for (const guestId of Object.keys(this.customers[stall.id])) {
+                const guestRecord = this.customers[stall.id][Number(guestId)];
                 if (this.currentTick == this.pingInterval / 2) {
+                    // halfway through a ping, set guest hunger/thirst so they'll buy
                     if (ShopItemDrinkEnums.some((drink) => drink == stall.object.shopItem)) {
-                        guest.thirst = 50;
+                        guestRecord.guest.thirst = 50;
                     } else {
-                        guest.hunger = 50;
+                        guestRecord.guest.hunger = 50;
                     }
+                } else if (this.currentTick == this.pingInterval) {
+                    guestRecord.guest.hunger = guestRecord.originalHunger;
+                    guestRecord.guest.thirst = guestRecord.originalThirst;
                 }
 
                 // make guest go to the stall!
-                setGuestDirection(guest, (tileCoords.direction + (tileCoords.direction < 2 ? +2 : -2)) as Direction);
-                setGuestDestination(guest, coords);
+                setGuestDirection(
+                    guestRecord.guest,
+                    (tileCoords.direction + (tileCoords.direction < 2 ? +2 : -2)) as Direction,
+                );
+                setGuestDestination(guestRecord.guest, coords);
             }
         }
     }

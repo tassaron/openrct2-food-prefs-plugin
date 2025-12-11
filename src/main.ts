@@ -20,7 +20,7 @@ import { StallPingScheduler } from "./stalls";
 import { Logger } from "./logger";
 import { arrayIncludes, createFavouriteFood } from "./util";
 
-const log = new Logger("main", 2);
+const log = new Logger("main", 0);
 
 function onClickMenuItem(db: GuestDb, _cleanup: (n: number[]) => void) {
     // Occurs when player clicks our menu item
@@ -30,6 +30,7 @@ function onClickMenuItem(db: GuestDb, _cleanup: (n: number[]) => void) {
 
 function onPeepSpawn(db: GuestDb, foodAvailable: GuestFoodItemType[], guest: GuestGenerationArgs) {
     db[guest.id] = createFavouriteFood(foodAvailable);
+    db[guest.id] = "burger";
     log.debug(`guest ${guest.id} assigned ${db[guest.id]}`);
 }
 
@@ -81,6 +82,7 @@ export function main() {
         if (guest.id != null) {
             const favouriteGender = createFavouriteFood(foodAvailable);
             db[guest.id] = favouriteGender;
+            db[guest.id] = "burger";
             log.debug(`guest ${guest.id} (${guest.name}) assigned ${favouriteGender}`);
         }
     }
