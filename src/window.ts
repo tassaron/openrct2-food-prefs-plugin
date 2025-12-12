@@ -1,14 +1,16 @@
 import { Logger } from "./logger";
-import { GuestDb, GuestFoodArray } from "./globals";
-import { isValidGuest, arrayIncludes } from "./util";
+import { GuestDb } from "./globals";
+import { isValidGuest } from "./util";
+import { box, checkbox, dropdown, groupbox, label, listview, viewport, window, vertical, horizontal } from "openrct2-flexui";
 
 const log = new Logger("window", 1);
 
-export function showWindow(db: GuestDb, _cleanup: (n: number[]) => void) {
+function createListOfGuests(db: GuestDb, _cleanup: (n: number[]) => void) {
+    const lgbt: string[][] = [];
     const rubbish: number[] = [];
     if (!db) {
         log.error("missing entire GuestDb");
-        return;
+        return [];
     }
 
     for (const id of Object.getOwnPropertyNames(db).map(Number)) {
@@ -19,26 +21,85 @@ export function showWindow(db: GuestDb, _cleanup: (n: number[]) => void) {
             rubbish.push(id);
             continue;
         }
-        try {
-            for (const item of (guest as Guest).items) {
-                if (arrayIncludes(GuestFoodArray, item.type)) {
-                    log.info(`${(guest as Guest).name} (${(guest as Guest).id}) has ${item.type}`);
-                } else if (item.type === "voucher" && (item as Voucher).voucherType === "food_drink_free") {
-                    log.info(`${(guest as Guest).name} has a voucher for free ${(item as FoodDrinkVoucher).item}`);
-                } else {
-                    log.verbose(`${(guest as Guest).name} has ${(guest as Guest).items.length} items`);
-                }
-            }
-        } catch (e) {
-            let msg: string;
-            if (e instanceof Error) {
-                msg = e.message;
-            } else {
-                msg = e as string;
-            }
-            log.error(`exception during iteration: ${msg}`);
-        }
+        lgbt.push([(guest as Guest).name, db[Number(guest.id)]]);
     }
     // cleanup outdated entries
     _cleanup(rubbish);
+    return lgbt;
+}
+
+export function createWindow(db: GuestDb, _cleanup: (n: number[]) => void) {
+    return window({
+        title: "Food Preferences",
+        width: { value: 240, min: 200, max: 960 },
+        height: { value: 480, min: 340, max: 1200 },
+        content: [
+            box({
+                text: "Food Preference Statistics",
+                content: vertical([
+                    label({
+                        text: "Burger 30%",
+                    }),
+                    label({
+                        text: "Drink 30%",
+                    }),
+                    label({
+                        text: "Unknown 40%",
+                    }),
+                ]),
+            }),
+            groupbox({
+                content: [
+                    listview({
+                        columns: [
+                            { header: "Guest", canSort: false },
+                            {
+                                header: "Favourite Item",
+                                canSort: true,
+                                tooltip: "guest will sometimes buy this item when they otherwise would not",
+                            },
+                        ],
+                        items: createListOfGuests(db, _cleanup),
+                        onClick: (item: number, column: number) =>
+                            console.log(`Clicked item ${item} in column ${column} in listview`),
+                    }),
+                    viewport({
+                        target: map.getAllEntities("guest")[0]?.id,
+                    }),
+                ],
+            }),
+            box({
+                text: "Cheats",
+                content: vertical({
+                    content: [
+                        horizontal({
+                            content: [
+                                checkbox({
+                                    disabled: true,
+                                    text: "Guests only like:",
+                                    tooltip: "normal guest preference is ignored in favour of the selected option",
+                                    onChange: (checked: boolean) =>
+                                        console.log(`Checkbox has changed to ${checked ? "" : "not "}checked`),
+                                }),
+                                dropdown({
+                                    disabled: true,
+                                    items: ["Everything", "Burger", "Drink"],
+                                    onChange: (index: number) => console.log(`Dropdown changed to index ${index}`),
+                                }),
+                            ],
+                        }),
+                        checkbox({
+                            disabled: true,
+                            isChecked: true,
+                            text: "Show unknown foods",
+                            tooltip: "not implemented: unresearched foods will be hidden in the future",
+                            //tooltip: "show foods that have not been unlocked via research",
+                            onChange: (checked: boolean) =>
+                                console.log(`Checkbox has changed to ${checked ? "" : "not "}checked`),
+                        }),
+                    ],
+                }),
+            }),
+        ],
+    });
 }

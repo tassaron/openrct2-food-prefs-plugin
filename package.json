@@ -12,6 +12,9 @@
         "build:dev": "rollup --config rollup.config.js",
         "test": "jest"
     },
+    "dependencies": {
+        "openrct2-flexui": "^0.1.0-prerelease.20"
+    },
     "devDependencies": {
         "@jest/globals": "^30.2.0",
         "@rollup/plugin-node-resolve": "^15.0.1",

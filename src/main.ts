@@ -15,23 +15,36 @@
  */
 
 import { GuestDb, ShopItemFoodEnums, ShopItemFoodEnumMap, GuestFoodItemType } from "./globals";
-import { showWindow } from "./window";
 import { StallPingScheduler } from "./stalls";
 import { Logger } from "./logger";
-import { arrayIncludes, createFavouriteFood } from "./util";
+import { arrayIncludes, createFavouriteFood, isValidGuest } from "./util";
+import { createWindow } from "./window";
+import { WindowTemplate } from "openrct2-flexui";
 
-const log = new Logger("main", 0);
+const log = new Logger("main", 1);
 
-function onClickMenuItem(db: GuestDb, _cleanup: (n: number[]) => void) {
+function onClickMenuItem(window: () => WindowTemplate) {
     // Occurs when player clicks our menu item
     log.verbose("-~-~-~-~-~-~click~-~-~-~-~-~-~");
-    showWindow(db, _cleanup);
+    window().open();
 }
 
 function onPeepSpawn(db: GuestDb, foodAvailable: GuestFoodItemType[], guest: GuestGenerationArgs) {
+    const guestEntity = map.getEntity(guest.id);
     db[guest.id] = createFavouriteFood(foodAvailable);
-    db[guest.id] = "burger";
-    log.debug(`guest ${guest.id} assigned ${db[guest.id]}`);
+    log.debug(`guest ${guest.id} (${(guestEntity as Guest).name}) assigned ${db[guest.id]}`);
+    if (!isValidGuest) return;
+    const checkGuestForVoucher = function () {
+        if ((guestEntity as Guest).items.length != 1) return;
+        const potentialVoucher = (guestEntity as Guest).items[0];
+        if (potentialVoucher.type === "voucher" && (potentialVoucher as Voucher).voucherType === "food_drink_free") {
+            db[guest.id] = (potentialVoucher as FoodDrinkVoucher).item as GuestFoodItemType;
+            log.debug(`guest ${guest.id} (${(guestEntity as Guest).name}) re-assigned ${db[guest.id]} due to voucher`);
+        }
+    };
+    // delay checking for voucher until the guest has finished generating?
+    // whatever the true reason; it doesn't work without this, anyway
+    context.setTimeout(checkGuestForVoucher, 1000);
 }
 
 function onActionExecuted(stallPingScheduler: StallPingScheduler, e: GameActionEventArgs) {
@@ -82,7 +95,6 @@ export function main() {
         if (guest.id != null) {
             const favouriteGender = createFavouriteFood(foodAvailable);
             db[guest.id] = favouriteGender;
-            db[guest.id] = "burger";
             log.debug(`guest ${guest.id} (${guest.name}) assigned ${favouriteGender}`);
         }
     }
@@ -97,14 +109,20 @@ export function main() {
     });
     context.subscribe("action.execute", (e: GameActionEventArgs) => onActionExecuted(stallPingScheduler, e));
 
+    // Create window creator :P
+    // I tried to use a proper model for this, but couldn't get the example code to run
+    const windowCreator = () => {
+        return createWindow(db, (n: number[]) => cleanup(db, n));
+    };
+
     // Register a menu item under the map icon:
     if (typeof ui !== "undefined") {
         ui.registerShortcut({
             id: "food-prefs.openwindow",
             text: "Open Food Preferences window",
             bindings: ["CTRL+F"],
-            callback: () => onClickMenuItem(db, (n: number[]) => cleanup(db, n)),
+            callback: () => onClickMenuItem(windowCreator),
         });
-        ui.registerMenuItem("Food Preferences", () => onClickMenuItem(db, (n: number[]) => cleanup(db, n)));
+        ui.registerMenuItem("Food Preferences", () => onClickMenuItem(windowCreator));
     }
 }

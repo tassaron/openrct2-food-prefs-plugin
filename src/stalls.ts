@@ -4,7 +4,7 @@
 
 import { Logger } from "./logger";
 import { GuestFoodArray, GuestDb, ShopItemFoodEnums, ShopItemFoodEnumMap, ShopItemDrinkEnums, tileSize } from "./globals";
-import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile, isValidGuest } from "./util";
+import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile } from "./util";
 
 const log = new Logger("stalls", 2);
 
@@ -22,8 +22,6 @@ export class StallPingScheduler {
     pingInterval: number;
     currentTick = 0;
     activePing?: IDisposable;
-
-    // #TODO save guests' hunger/thirst to be restored, only affects guests on tile at start, and check inventory
 
     constructor(pingInterval: number, gameMap?: GameMap) {
         this.pingInterval = pingInterval;
