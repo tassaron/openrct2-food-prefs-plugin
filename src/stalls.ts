@@ -103,11 +103,11 @@ export class StallPingScheduler {
         const nearbyGuests = getGuestsOnNeighbouringTile(tileCoords);
         log.verbose(`found ${nearbyGuests.length} guests next to ${stall.id}`);
         const potentialCustomers: Record<number, { guest: Guest; originalHunger: number; originalThirst: number }> = {};
-        for (const _guest of nearbyGuests) {
-            potentialCustomers[<number>_guest.id] = {
-                guest: _guest,
-                originalHunger: _guest.hunger,
-                originalThirst: _guest.thirst,
+        for (const guest_ of nearbyGuests) {
+            potentialCustomers[<number>guest_.id] = {
+                guest: guest_,
+                originalHunger: guest_.hunger,
+                originalThirst: guest_.thirst,
             };
         }
         // skim off the irrelevant guests who aren't happy, don't like the food, etc.
@@ -150,8 +150,8 @@ export class StallPingScheduler {
                     `pinging stall: ${shopItem} id${stall.id} @ ${tileCoords.x}, ${tileCoords.y}, ${tileCoords.z}, ${tileCoords.direction}`,
                 );
                 // fill up our potential customers only on the 0th tick
-                const _customers = StallPingScheduler.findCustomers(db, stall, tileCoords);
-                this.customers[stall.id] = Object.assign({}, _customers);
+                const customers_ = StallPingScheduler.findCustomers(db, stall, tileCoords);
+                this.customers[stall.id] = Object.assign({}, customers_);
             }
 
             // tell guests in front of the stall to come here

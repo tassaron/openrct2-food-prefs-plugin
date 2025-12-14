@@ -1,17 +1,49 @@
 import { Logger } from "./logger";
-import { GuestDb } from "./globals";
-import { isValidGuest } from "./util";
-import { box, checkbox, dropdown, groupbox, label, listview, viewport, window, vertical, horizontal } from "openrct2-flexui";
+import { GuestDb, GuestFoodItemType, GuestFoodItemTypes } from "./globals";
+import { isValidGuest, getAvailableFood, arrayIncludes } from "./util";
+import {
+    box,
+    checkbox,
+    dropdown,
+    groupbox,
+    label,
+    store,
+    listview,
+    viewport,
+    window,
+    vertical,
+    horizontal,
+    compute,
+} from "openrct2-flexui";
 
 const log = new Logger("window", 1);
 
-function createListOfGuests(db: GuestDb, _cleanup: (n: number[]) => void) {
-    const lgbt: string[][] = [];
+function createListViewOfGuests(
+    db: GuestDb,
+    cleanup_: (n: number[]) => void,
+    foods: GuestFoodItemType[],
+): [string[][], Record<number, number>] {
+    /*
+     ** Scans guestDb to return two things:
+     **  - 1) array of 2-item arrays: [[guest name, favourite food],...]
+     **  - 2) Record<arrayIndex, guest.id>
+     ** These are used to populate the ListView and select guests from it
+     */
     const rubbish: number[] = [];
     if (!db) {
         log.error("missing entire GuestDb");
-        return [];
+        return [[], {}];
     }
+
+    // return value used to populate listview
+    const lgbtListItems: string[][] = [];
+
+    // return value used to select guest from listview
+    const indexRecord: Record<number, number> = {};
+
+    const isResearched = (foodName: GuestFoodItemType) => {
+        return arrayIncludes(foods, foodName);
+    };
 
     for (const id of Object.getOwnPropertyNames(db).map(Number)) {
         const guest = map.getEntity(id);
@@ -21,14 +53,20 @@ function createListOfGuests(db: GuestDb, _cleanup: (n: number[]) => void) {
             rubbish.push(id);
             continue;
         }
-        lgbt.push([(guest as Guest).name, db[Number(guest.id)]]);
+        const foodName = db[Number(guest.id)];
+        const newLength = lgbtListItems.push([(guest as Guest).name, isResearched(foodName) ? foodName : "unknown"]);
+        indexRecord[newLength - 1] = guest.id!;
     }
     // cleanup outdated entries
-    _cleanup(rubbish);
-    return lgbt;
+    cleanup_(rubbish);
+    return [lgbtListItems, indexRecord];
 }
 
-export function createWindow(db: GuestDb, _cleanup: (n: number[]) => void) {
+export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void) {
+    const researchedFood = getAvailableFood("researched");
+    const [listOfGuests, indexRecord] = createListViewOfGuests(db, cleanup_, researchedFood);
+    const selectedGuest = store<number | null>(null);
+
     return window({
         title: "Food Preferences",
         width: { value: 240, min: 200, max: 960 },
@@ -55,16 +93,17 @@ export function createWindow(db: GuestDb, _cleanup: (n: number[]) => void) {
                             { header: "Guest", canSort: false },
                             {
                                 header: "Favourite Item",
-                                canSort: true,
                                 tooltip: "guest will sometimes buy this item when they otherwise would not",
                             },
                         ],
-                        items: createListOfGuests(db, _cleanup),
-                        onClick: (item: number, column: number) =>
-                            console.log(`Clicked item ${item} in column ${column} in listview`),
+                        items: listOfGuests,
+                        onClick: (bisexual: number, _column: number) => {
+                            log.info(`Clicked guest who likes ${db[indexRecord[bisexual]]}.`);
+                            selectedGuest.set(bisexual);
+                        },
                     }),
                     viewport({
-                        target: map.getAllEntities("guest")[0]?.id,
+                        target: compute(selectedGuest, (sg) => (sg ? map.getEntity(indexRecord[sg]) : null)),
                     }),
                 ],
             }),

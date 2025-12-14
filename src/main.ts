@@ -14,10 +14,10 @@
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { GuestDb, ShopItemFoodEnums, ShopItemFoodEnumMap, GuestFoodItemType } from "./globals";
+import { GuestDb, GuestFoodItemType } from "./globals";
 import { StallPingScheduler } from "./stalls";
 import { Logger } from "./logger";
-import { arrayIncludes, createFavouriteFood, isValidGuest } from "./util";
+import { createFavouriteFood, isValidGuest, getAvailableFood } from "./util";
 import { createWindow } from "./window";
 import { WindowTemplate } from "openrct2-flexui";
 
@@ -61,19 +61,6 @@ function cleanup(db: GuestDb, rubbish: number[]) {
     }
 }
 
-function getAvailableFood() {
-    const foods: GuestFoodItemType[] = [];
-    objectManager
-        .getAllObjects("ride")
-        .filter((obj) => obj.shopItem != 255)
-        .forEach((rideObj) => {
-            if (arrayIncludes(ShopItemFoodEnums, rideObj.shopItem)) {
-                foods.push(ShopItemFoodEnumMap[rideObj.shopItem]);
-            }
-        });
-    return foods;
-}
-
 export function main() {
     // Happens on startup of the plugin
 
@@ -83,7 +70,7 @@ export function main() {
     }
 
     // What food/drink stalls are available in this scenario?
-    const foodAvailable = getAvailableFood();
+    const foodAvailable = getAvailableFood("scenario");
     log.info(`found foods for scenario: ${foodAvailable}`);
     // Load/create GuestDb for this park
     //log.info("loading data for saved entities");

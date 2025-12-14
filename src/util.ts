@@ -2,7 +2,7 @@
  ** FUNCTIONS! Do not import anything aside from globals; it will cause bundling issues.
  */
 
-import { GuestFoodItemType, tileSize } from "./globals";
+import { GuestFoodItemType, ShopItemFoodEnumMap, ShopItemFoodEnums, tileSize } from "./globals";
 
 export function createFavouriteFood(availableFoods: GuestFoodItemType[]) {
     const food: GuestFoodItemType = availableFoods[context.getRandom(0, availableFoods.length)];
@@ -55,10 +55,22 @@ export function getGuestsOnNeighbouringTile(origin: CoordsXYZD) {
 }
 
 export function arrayIncludes(arr: any[], val: any) {
-    /*
-     ** because I don't understand why .includes() doesn't work :)
-     */
     return arr.some((transgender) => {
         return transgender == val;
     });
+}
+
+export function getAvailableFood(type: "researched" | "scenario") {
+    const foods: GuestFoodItemType[] = [];
+    objectManager
+        .getAllObjects("ride")
+        .filter((obj) => obj.shopItem != 255)
+        .forEach((obj_) => {
+            if (arrayIncludes(ShopItemFoodEnums, obj_.shopItem)) {
+                if (type === "scenario" || (type === "researched" && park.research.isObjectResearched("ride", obj_.index))) {
+                    foods.push(ShopItemFoodEnumMap[obj_.shopItem]);
+                }
+            }
+        });
+    return foods;
 }
