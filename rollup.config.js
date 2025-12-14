@@ -12,7 +12,7 @@ const options = {
 };
 
 async function getOutput() {
-    if (options.build !== "development") {
+    if (options.build === "production") {
         return `./dist/${options.filename}`;
     }
 
@@ -61,7 +61,10 @@ const config = {
                 comments: false,
                 quote_style: 1,
                 wrap_iife: true,
-                beautify: options.build === "development",
+                beautify: options.build !== "production",
+            },
+            mangle: {
+                keep_fnames: options.build !== "production",
             },
         }),
     ],

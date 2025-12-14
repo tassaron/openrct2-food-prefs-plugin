@@ -1,42 +1,52 @@
-import { expect, test } from "@jest/globals";
+/*
+ **    Copyright (C) 2025 Brianna Rainey
+ **    This program is free software: you can redistribute it and/or modify
+ **    it under the terms of the GNU General Public License as published by
+ **    the Free Software Foundation, either version 3 of the License, or
+ **    (at your option) any later version.
+ **
+ **    This program is distributed in the hope that it will be useful,
+ **    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **    GNU General Public License for more details.
+ **
+ **    You should have received a copy of the GNU General Public License
+ **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import { ShopItemFoodEnumMap, tileSize } from "../globals";
+import runTest from "./runTest";
 
-import { StallPingScheduler } from "../stalls";
-import { ShopItemFoodEnumMap } from "../globals";
-import MockGameMap from "../__mocks__/GameMap.mock";
-import MockTile from "../__mocks__/Tile.mock";
-import MockRide from "../__mocks__/Ride.mock";
-import MockRideStation from "../__mocks__/RideStation.mock";
-import MockTrackElement from "../__mocks__/TileElement.mock";
+function test_SubSandwichStationTrackHasExpectedCoords() {
+    const coords = map.rides[22].stations[0].start;
+    console.log(`Expect ${Math.floor(coords.x / tileSize)} == 2 && ${Math.floor(coords.y / tileSize)} == 13`);
+    return Math.floor(coords.x / tileSize) == 2 && Math.floor(coords.y / tileSize) == 13;
+}
 
-let map: MockGameMap;
+function test_MoonJuiceStationTrackHasExpectedCoords() {
+    // facing a different direction from the above
+    const coords = map.rides[30].stations[0].start;
+    map.rides[30].name == "Moon Juice 1";
+    console.log(`Expect ${Math.floor(coords.x / tileSize)} == 10 && ${Math.floor(coords.y / tileSize)} == 9`);
+    return Math.floor(coords.x / tileSize) == 10 && Math.floor(coords.y / tileSize) == 9;
+}
 
-beforeAll(() => {
-    map = new MockGameMap({
-        map: {
-            0: {
-                0: new MockTile(0, 0, [new MockTrackElement(0, 0)]),
-            },
-        },
-        rides: [new MockRide(0, 6, [new MockRideStation({ x: 0, y: 0, z: 0 })])],
-    });
-});
+function test_MoonJuiceStallHasExpectedName() {
+    const name = map.rides[30].name;
+    console.log(`Expect ${name} == "Moon Juice 1"`);
+    return name == "Moon Juice 1";
+}
 
-test("map has tile at 0,0", () => {
-    const tile = map.getTile(0, 0);
-    return expect(tile.x).toBe(0);
-});
+function test_SubSandwichStallFoundBySPS(stallPingScheduler: any) {
+    const shopItem = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
+        return stall[0].id == 22;
+    })[0][0].object.shopItem;
+    console.log(`Expect ${ShopItemFoodEnumMap[shopItem]} == "sub_sandwich"`);
+    return ShopItemFoodEnumMap[shopItem] == "sub_sandwich";
+}
 
-test("burger ride has rideobject with shopitem", () => {
-    const burger = map.rides[0].object.shopItem;
-    return expect(ShopItemFoodEnumMap[burger]).toBe("burger");
-});
-
-test("map has burger stall tile", () => {
-    const tileCoords = map.rides[0].stations[0].start;
-    return expect(tileCoords).toMatchObject({ x: 0, y: 0, z: 0 });
-});
-
-test("initialize StallPingScheduler", () => {
-    const stallPingScheduler = new StallPingScheduler(120, map);
-    return expect(stallPingScheduler.stalls[0][0]).toEqual(map.rides[0]);
-});
+export default function testSuite_stalls(stallPingScheduler: any) {
+    runTest(test_SubSandwichStationTrackHasExpectedCoords);
+    runTest(test_MoonJuiceStationTrackHasExpectedCoords);
+    runTest(test_MoonJuiceStallHasExpectedName);
+    runTest(test_SubSandwichStallFoundBySPS, [stallPingScheduler]);
+}

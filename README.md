@@ -42,6 +42,10 @@ Creates a develop build of the plugin. This version is not optimized for sharing
 
 Will start a script that will automatically run `npm run build:dev` every time you make a change to any Typescript or Javascript file inside the `./src/` folder.
 
+#### `npm test` or `npm run test`
+
+Builds the script in testing mode, which causes the plugin to run all its test functions after the plugin loads. This script then launches OpenRCT2 headlessly into a test map, and exits after tests have completed. **Note:** tests operate on a save game that includes all food stalls except `iced_tea`, with `wonton_soup` about to be researched
+
 ### Hot reload
 
 This project supports the [OpenRCT2 hot reload feature](https://github.com/OpenRCT2/OpenRCT2/blob/master/distribution/scripting.md#writing-scripts) for development.

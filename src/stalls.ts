@@ -1,9 +1,34 @@
 /*
+ **    Copyright (C) 2025 Brianna Rainey
+ **    This program is free software: you can redistribute it and/or modify
+ **    it under the terms of the GNU General Public License as published by
+ **    the Free Software Foundation, either version 3 of the License, or
+ **    (at your option) any later version.
+ **
+ **    This program is distributed in the hope that it will be useful,
+ **    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ **    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ **    GNU General Public License for more details.
+ **
+ **    You should have received a copy of the GNU General Public License
+ **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/*
  ** Everything related to detecting and "pinging" stalls (aka luring quests towards them)
  */
 
 import { Logger } from "./logger";
-import { GuestFoodArray, GuestDb, ShopItemFoodEnums, ShopItemFoodEnumMap, ShopItemDrinkEnums, tileSize } from "./globals";
+import {
+    GuestFoodArray,
+    GuestDb,
+    ShopItemFoodEnums,
+    ShopItemFoodEnumMap,
+    ShopItemDrinkEnums,
+    tileSize,
+    FoodCheats,
+    GuestFoodItemType,
+} from "./globals";
 import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile } from "./util";
 
 const log = new Logger("stalls", 2);
@@ -22,6 +47,7 @@ export class StallPingScheduler {
     pingInterval: number;
     currentTick = 0;
     activePing?: IDisposable;
+    cheats: FoodCheats = {};
 
     constructor(pingInterval: number, gameMap?: GameMap) {
         this.pingInterval = pingInterval;
@@ -29,10 +55,11 @@ export class StallPingScheduler {
         this.fresh = true;
     }
 
-    newDay(db: GuestDb) {
+    newDay(db: GuestDb, cheats: FoodCheats) {
         /*
          ** Always happens at the start of a game day
          */
+        Object.assign(this.cheats, cheats);
         if (this.activePing !== undefined) {
             log.warn("ping interval is too high. ignoring this day");
             return;
@@ -99,7 +126,7 @@ export class StallPingScheduler {
         return stalls;
     }
 
-    static findCustomers(db: GuestDb, stall: Ride, tileCoords: CoordsXYZD) {
+    static findCustomers(db: GuestDb, stall: Ride, tileCoords: CoordsXYZD, cheats: FoodCheats) {
         const nearbyGuests = getGuestsOnNeighbouringTile(tileCoords);
         log.verbose(`found ${nearbyGuests.length} guests next to ${stall.id}`);
         const potentialCustomers: Record<number, { guest: Guest; originalHunger: number; originalThirst: number }> = {};
@@ -111,6 +138,11 @@ export class StallPingScheduler {
             };
         }
         // skim off the irrelevant guests who aren't happy, don't like the food, etc.
+        var comparisonFood: GuestFoodItemType | "" = ShopItemFoodEnumMap[stall.object.shopItem];
+        if (cheats.guestsIgnoreFavourite) {
+            comparisonFood = cheats.guestsOnlyLike ? cheats.guestsOnlyLike : "";
+        }
+
         for (const guest of nearbyGuests) {
             if (
                 // remove unhappy guests
@@ -118,7 +150,7 @@ export class StallPingScheduler {
                 guest.isLost ||
                 guest.getFlag("leavingPark") ||
                 // remove guests who don't prefer this stall's food item
-                db[<number>guest.id] != ShopItemFoodEnumMap[stall.object.shopItem] ||
+                (db[<number>guest.id] != comparisonFood && comparisonFood.length > 0) ||
                 // remove guests who already have a food item
                 GuestFoodArray.some((food) => {
                     return guest.hasItem({ type: food });
@@ -150,7 +182,7 @@ export class StallPingScheduler {
                     `pinging stall: ${shopItem} id${stall.id} @ ${tileCoords.x}, ${tileCoords.y}, ${tileCoords.z}, ${tileCoords.direction}`,
                 );
                 // fill up our potential customers only on the 0th tick
-                const customers_ = StallPingScheduler.findCustomers(db, stall, tileCoords);
+                const customers_ = StallPingScheduler.findCustomers(db, stall, tileCoords, this.cheats);
                 this.customers[stall.id] = Object.assign({}, customers_);
             }
 
