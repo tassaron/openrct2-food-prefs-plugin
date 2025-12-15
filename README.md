@@ -15,7 +15,7 @@ At the **beginning of each in-game day**, each food/drink stall **lures guests f
 
 ## Thanks
 
-Huge thanks to the entire [OpenRCT2](https://github.com/OpenRCT2/OpenRCT2) team and community for keeping this classic game alive. Thanks to [Basssiiie](https://github.com/Basssiiie) for creating [OpenRCT2-Simple-Typescript-Template](https://github.com/Basssiiie/OpenRCT2-Simple-Typescript-Template) and [OpenRCT2-FlexUI](https://github.com/Basssiiie/OpenRCT2-FlexUI).
+Huge thanks to the entire [OpenRCT2](https://github.com/OpenRCT2/OpenRCT2) team and community for keeping this classic game alive. Thanks to [Basssiiie](https://github.com/Basssiiie) for creating [OpenRCT2-Simple-Typescript-Template](https://github.com/Basssiiie/OpenRCT2-Simple-Typescript-Template) and [OpenRCT2-FlexUI](https://github.com/Basssiiie/OpenRCT2-FlexUI). Thanks also to [Manticore-007](https://github.com/Manticore-007) for the Peep Editor plugin, which taught me that Duktape can print stacktraces.
 
 ## How to develop
 

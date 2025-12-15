@@ -142,20 +142,29 @@ export class StallPingScheduler {
         if (cheats.guestsIgnoreFavourite) {
             comparisonFood = cheats.guestsOnlyLike ? cheats.guestsOnlyLike : "";
         }
-
+        const hasFood = function (guest: Guest) {
+            return GuestFoodArray.some((food) => {
+                return guest.hasItem({ type: food });
+            });
+        };
         for (const guest of nearbyGuests) {
             if (
                 // remove unhappy guests
                 guest.happiness < 41 ||
-                guest.isLost ||
                 guest.getFlag("leavingPark") ||
                 // remove guests who don't prefer this stall's food item
+                //db[<number>guest.id] != comparisonFood ||
                 (db[<number>guest.id] != comparisonFood && comparisonFood.length > 0) ||
                 // remove guests who already have a food item
-                GuestFoodArray.some((food) => {
-                    return guest.hasItem({ type: food });
-                })
+                hasFood(guest)
             ) {
+                /*
+                console.log(`${guest.name} (${guest.id}) likes ${db[<number>guest.id]}`);
+                console.log(`${guest.name}'s happiness is ${guest.happiness}`);
+                console.log(`${guest.name} is${guest.isLost ? "" : "n't"} lost`);
+                console.log(`${guest.name} is${guest.getFlag("leavingPark") ? "" : "n't"} leaving park`);
+                console.log(`${guest.name}'s ${hasFood(guest) ? "has" : "doesn't have"} food`);
+                */
                 delete potentialCustomers[<number>guest.id];
             }
         }

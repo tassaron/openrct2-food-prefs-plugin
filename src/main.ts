@@ -18,9 +18,10 @@ import { plugin } from "./meta";
 import { GuestDb, GuestFoodItemType, FoodCheats } from "./globals";
 import { StallPingScheduler } from "./stalls";
 import { Logger } from "./logger";
-import { createFavouriteFood, isValidGuest, getAvailableFood } from "./util";
+import { createFavouriteFood, getAvailableFood, checkGuestForVoucher } from "./util";
 import { createWindow } from "./window";
 import { WindowTemplate } from "openrct2-flexui";
+import runTestSuites from "./__tests__/runTestSuite";
 
 const log = new Logger("main", 0);
 
@@ -30,22 +31,32 @@ function onClickMenuItem(window: () => WindowTemplate) {
     window().open();
 }
 
+export function delayedCheckGuestForVoucher(db: GuestDb, guest: Guest, tries: number) {
+    if (tries == 0) {
+        log.error("Timed out while trying to check guest for voucher");
+        return;
+    }
+    const voucher = checkGuestForVoucher(guest);
+    if (voucher === undefined) {
+        // try a few more times until the guest hopefully is valid
+        context.setTimeout(() => delayedCheckGuestForVoucher(db, guest, tries - 1), 1000);
+        return;
+    } else if (voucher === false) {
+        // guest genuinely doesn't have a voucher
+        return;
+    }
+    db[guest.id!] = voucher as GuestFoodItemType;
+    log.verbose(`guest ${guest.id} (${guest.name}) re-assigned ${voucher} due to voucher`);
+}
+
 function onPeepSpawn(db: GuestDb, foodAvailable: GuestFoodItemType[], guest: GuestGenerationArgs) {
     const guestEntity = map.getEntity(guest.id);
     db[guest.id] = createFavouriteFood(foodAvailable);
     log.debug(`guest ${guest.id} (${(guestEntity as Guest).name}) assigned ${db[guest.id]}`);
-    if (!isValidGuest) return;
-    const checkGuestForVoucher = function () {
-        if ((guestEntity as Guest).items.length != 1) return;
-        const potentialVoucher = (guestEntity as Guest).items[0];
-        if (potentialVoucher.type === "voucher" && (potentialVoucher as Voucher).voucherType === "food_drink_free") {
-            db[guest.id] = (potentialVoucher as FoodDrinkVoucher).item as GuestFoodItemType;
-            log.verbose(`guest ${guest.id} (${(guestEntity as Guest).name}) re-assigned ${db[guest.id]} due to voucher`);
-        }
-    };
+
     // delay checking for voucher until the guest has finished generating?
     // whatever the true reason; it doesn't work without this, anyway
-    context.setTimeout(checkGuestForVoucher, 1000);
+    context.setTimeout(() => delayedCheckGuestForVoucher(db, guestEntity as Guest, 5), 1000);
 }
 
 function onActionExecuted(stallPingScheduler: StallPingScheduler, e: GameActionEventArgs) {
@@ -73,6 +84,7 @@ export function main() {
     // What food/drink stalls are available in this scenario?
     const foodAvailable = getAvailableFood("scenario");
     log.info(`found foods for scenario: ${foodAvailable}`);
+
     // Load/create GuestDb for this park
     //log.info("loading data for saved entities");
     //const parkStorage = context.getParkStorage();
@@ -87,8 +99,6 @@ export function main() {
         }
     }
 
-    // register our custom action to synchronize guest movement
-    //context.registerAction("guestsetdestination", querySetGuestDestination, executeSetGuestDestination);
     const cheats: FoodCheats = {
         guestsIgnoreFavourite: false,
         guestsOnlyLike: undefined,
@@ -121,9 +131,6 @@ export function main() {
     // run tests one second after loading
     // tests will be treeshaken by rollup if not testing
     if (plugin.buildEnviron == "testing") {
-        //const getSPS = () => {
-        //    return stallPingScheduler;
-        //};
-        context.setTimeout(() => plugin.runTestSuites(stallPingScheduler), 1000);
+        context.setTimeout(() => runTestSuites(db, stallPingScheduler), 1000);
     }
 }

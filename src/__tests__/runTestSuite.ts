@@ -13,10 +13,12 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { GuestDb } from "../globals";
+import { StallPingScheduler } from "../stalls";
+import testSuite_guests from "./guests.test";
 import testSuite_stalls from "./stalls.test";
 
-//#TODO make interface for StallPingScheduler so this isn't any type
-export default function runTestSuites(stallPingScheduler: any) {
-    console.log(stallPingScheduler);
-    testSuite_stalls(stallPingScheduler);
+export default function runTestSuites(db: GuestDb, stallPingScheduler: StallPingScheduler) {
+    testSuite_guests(db);
+    testSuite_stalls(db, stallPingScheduler);
 }

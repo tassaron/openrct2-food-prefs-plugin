@@ -90,3 +90,12 @@ export function getAvailableFood(type: "researched" | "scenario") {
         });
     return foods;
 }
+
+export function checkGuestForVoucher(guestEntity: Guest): GuestFoodItemType | undefined | false {
+    if (!isValidGuest(guestEntity) || (guestEntity as Guest).items.length != 1) return undefined;
+    const potentialVoucher = (guestEntity as Guest).items[0];
+    if (potentialVoucher.type === "voucher" && (potentialVoucher as Voucher).voucherType === "food_drink_free") {
+        return (potentialVoucher as FoodDrinkVoucher).item as GuestFoodItemType;
+    }
+    return false;
+}
