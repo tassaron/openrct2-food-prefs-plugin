@@ -138,10 +138,15 @@ export class StallPingScheduler {
             };
         }
         // skim off the irrelevant guests who aren't happy, don't like the food, etc.
-        var comparisonFood: GuestFoodItemType | "" = ShopItemFoodEnumMap[stall.object.shopItem];
-        if (cheats.guestsIgnoreFavourite) {
-            comparisonFood = cheats.guestsOnlyLike ? cheats.guestsOnlyLike : "";
-        }
+        var shopFood: GuestFoodItemType = ShopItemFoodEnumMap[stall.object.shopItem];
+
+        const likesFood = function (guest: Guest) {
+            if (cheats.guestsIgnoreFavourite) {
+                if (!cheats.guestsOnlyLike) return true;
+                return shopFood === cheats.guestsOnlyLike;
+            }
+            return db[<number>guest.id] === shopFood;
+        };
         const hasFood = function (guest: Guest) {
             return GuestFoodArray.some((food) => {
                 return guest.hasItem({ type: food });
@@ -154,7 +159,7 @@ export class StallPingScheduler {
                 guest.getFlag("leavingPark") ||
                 // remove guests who don't prefer this stall's food item
                 //db[<number>guest.id] != comparisonFood ||
-                (db[<number>guest.id] != comparisonFood && comparisonFood.length > 0) ||
+                !likesFood(guest) ||
                 // remove guests who already have a food item
                 hasFood(guest)
             ) {

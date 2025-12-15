@@ -16,7 +16,6 @@
 import { GuestDb, GuestFoodItemType, ShopItemFoodEnumMap, tileSize } from "../globals";
 import { StallPingScheduler } from "../stalls";
 import { getGuestsOnNeighbouringTile } from "../util";
-//import { getGuestsOnNeighbouringTile } from "../util";
 import runTest from "./runTest";
 
 function test_SubSandwichStationTrackHasExpectedCoords() {
@@ -81,11 +80,15 @@ function test_GuestsPreferSoybeanMilkWithCheats(db: GuestDb, stallPingScheduler:
     return Object.keys(customers).length == 2;
 }
 
-function test_GuestsDoNotPreferSoybeanMilkWithoutCheats(db: GuestDb, stallPingScheduler: StallPingScheduler) {
+function test_GuestsDoNotPreferSoybeanMilkWithCheats(db: GuestDb, stallPingScheduler: StallPingScheduler) {
     const [ride, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
         return stall[0].id == 31;
     })[0];
-    const customers = StallPingScheduler.findCustomers(db, ride, coords, {
+    const nearbyGuests = getGuestsOnNeighbouringTile(coords);
+    const guest = <number>nearbyGuests[0].id;
+    const modifiedEntries: Record<number, GuestFoodItemType> = {};
+    modifiedEntries[guest] = "soybean_milk";
+    const customers = StallPingScheduler.findCustomers(Object.assign(db, modifiedEntries), ride, coords, {
         guestsIgnoreFavourite: true,
         guestsOnlyLike: "pretzel",
     });
@@ -100,6 +103,6 @@ export default function testSuite_stalls(db: GuestDb, stallPingScheduler: StallP
     runTest(test_SubSandwichStallFoundBySPS, [stallPingScheduler]);
     runTest(test_GuestsPreferSoybeanMilk, [{ ...db }, stallPingScheduler]);
     runTest(test_GuestsPreferSoybeanMilkWithCheats, [db, stallPingScheduler]);
-    runTest(test_GuestsDoNotPreferSoybeanMilkWithoutCheats, [db, stallPingScheduler]);
+    runTest(test_GuestsDoNotPreferSoybeanMilkWithCheats, [db, stallPingScheduler]);
     runTest(test_GuestsPreferEverythingWithCheats, [db, stallPingScheduler]);
 }
