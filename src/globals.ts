@@ -79,7 +79,7 @@ export const ShopItemFoodEnumMap: Record<number, GuestFoodItemType> = {
     46: "sujeonggwa",
     47: "sub_sandwich", // Ride.h enum is named subSandwich
     48: "cookie",
-    54: "roast_sausage", // Ride.h enum is named roastSausage
+    52: "roast_sausage", // Ride.h enum is named roastSausage
 } as const;
 
 // contains both food and drink
