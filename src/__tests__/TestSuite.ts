@@ -13,13 +13,31 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-export default function runTest<A extends any[]>(testFunc: ((...args: A) => boolean) | (() => boolean), args?: A) {
-    console.log(`~-~-~-~-~~-~-~-~-~~-~-~-~-~\n\nRunning ${testFunc.name}...`);
-    let result;
-    if (args === undefined) {
-        result = testFunc();
-    } else {
-        result = testFunc(...args);
+
+export class TestSuite {
+    name: string;
+    tests: [string, (...args: any[]) => boolean][] = [];
+
+    constructor(name: string) {
+        this.name = name;
     }
-    console.log(`${result ? "WOOHOO!" : "OUCH!"} ${testFunc.name} ${result ? "PASSED :)" : "FAILED :("}`);
+
+    addTest<A extends any[]>(name: string, testFunc: (...args: A) => boolean) {
+        this.tests.push([name, testFunc]);
+    }
+
+    runTest<A extends any[]>(name: string, testFunc: (...args: A) => boolean, args: A) {
+        console.log(`~-~-~-~-~~-~-~-~-~~-~-~-~-~\n\nRunning ${name}...`);
+        let result;
+        result = testFunc(...args);
+
+        console.log(`${result ? "WOOHOO!" : "OUCH!"} ${name} ${result ? "PASSED :)" : "FAILED :("}`);
+    }
+
+    runSuite<A extends any[]>(...args: A) {
+        for (const [name, testFunc] of this.tests) {
+            ////@ts-expect-error
+            this.runTest(name, testFunc, args);
+        }
+    }
 }

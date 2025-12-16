@@ -21,7 +21,7 @@ import { Logger } from "./logger";
 import { createFavouriteFood, getAvailableFood, checkGuestForVoucher } from "./util";
 import { createWindow } from "./window";
 import { WindowTemplate } from "openrct2-flexui";
-import runTestSuites from "./__tests__/runTestSuite";
+import runTestSuites from "./__tests__/TestRunner";
 
 const log = new Logger("main", 0);
 

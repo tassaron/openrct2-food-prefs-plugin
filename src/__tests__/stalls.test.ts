@@ -16,37 +16,40 @@
 import { GuestDb, GuestFoodItemType, ShopItemFoodEnumMap, tileSize } from "../globals";
 import { StallPingScheduler } from "../stalls";
 import { getGuestsOnNeighbouringTile } from "../util";
-import runTest from "./runTest";
+import { TestSuite } from "./TestSuite";
 
-function test_SubSandwichStationTrackHasExpectedCoords() {
+const suite = new TestSuite("stalls");
+export default suite;
+
+suite.addTest("SubSandwichStationTrackHasExpectedCoords", () => {
     const coords = map.rides[22].stations[0].start;
     console.log(`Expect ${Math.floor(coords.x / tileSize)} == 2 && ${Math.floor(coords.y / tileSize)} == 13`);
     return Math.floor(coords.x / tileSize) == 2 && Math.floor(coords.y / tileSize) == 13;
-}
+});
 
-function test_MoonJuiceStationTrackHasExpectedCoords() {
+suite.addTest("MoonJuiceStationTrackHasExpectedCoords", () => {
     // facing a different direction from the above
     const coords = map.rides[30].stations[0].start;
     map.rides[30].name == "Moon Juice 1";
     console.log(`Expect ${Math.floor(coords.x / tileSize)} == 10 && ${Math.floor(coords.y / tileSize)} == 9`);
     return Math.floor(coords.x / tileSize) == 10 && Math.floor(coords.y / tileSize) == 9;
-}
+});
 
-function test_MoonJuiceStallHasExpectedName() {
+suite.addTest("MoonJuiceStallHasExpectedName", () => {
     const name = map.rides[30].name;
     console.log(`Expect "${name}" == "Moon Juice 1"`);
     return name == "Moon Juice 1";
-}
+});
 
-function test_SubSandwichStallFoundBySPS(stallPingScheduler: StallPingScheduler) {
+suite.addTest("SubSandwichStallFoundBySPS", (_, stallPingScheduler: StallPingScheduler) => {
     const shopItem = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
         return stall[0].id == 22;
     })[0][0].object.shopItem;
     console.log(`Expect "${ShopItemFoodEnumMap[shopItem]}" == "sub_sandwich"`);
     return ShopItemFoodEnumMap[shopItem] == "sub_sandwich";
-}
+});
 
-function test_GuestsPreferSoybeanMilk(db: GuestDb, stallPingScheduler: StallPingScheduler) {
+suite.addTest("GuestsPreferSoybeanMilk", (db: GuestDb, stallPingScheduler: StallPingScheduler) => {
     const [ride, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
         return stall[0].id == 31;
     })[0];
@@ -57,18 +60,18 @@ function test_GuestsPreferSoybeanMilk(db: GuestDb, stallPingScheduler: StallPing
     const customers = StallPingScheduler.findCustomers(Object.assign(db, modifiedEntries), ride, coords, {});
     console.log(`Expect ${Object.keys(customers).length} == 1`);
     return Object.keys(customers).length == 1;
-}
+});
 
-function test_GuestsPreferEverythingWithCheats(db: GuestDb, stallPingScheduler: StallPingScheduler) {
+suite.addTest("GuestsPreferEverythingWithCheats", (db: GuestDb, stallPingScheduler: StallPingScheduler) => {
     const [ride, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
         return stall[0].id == 31;
     })[0];
     const customers = StallPingScheduler.findCustomers(db, ride, coords, { guestsIgnoreFavourite: true });
     console.log(`Expect ${Object.keys(customers).length} == 2`);
     return Object.keys(customers).length == 2;
-}
+});
 
-function test_GuestsPreferSoybeanMilkWithCheats(db: GuestDb, stallPingScheduler: StallPingScheduler) {
+suite.addTest("GuestsPreferSoybeanMilkWithCheats", (db: GuestDb, stallPingScheduler: StallPingScheduler) => {
     const [ride, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
         return stall[0].id == 31;
     })[0];
@@ -78,9 +81,9 @@ function test_GuestsPreferSoybeanMilkWithCheats(db: GuestDb, stallPingScheduler:
     });
     console.log(`Expect ${Object.keys(customers).length} == 2`);
     return Object.keys(customers).length == 2;
-}
+});
 
-function test_GuestsDoNotPreferSoybeanMilkWithCheats(db: GuestDb, stallPingScheduler: StallPingScheduler) {
+suite.addTest("GuestsDoNotPreferSoybeanMilkWithCheats", (db: GuestDb, stallPingScheduler: StallPingScheduler) => {
     const [ride, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
         return stall[0].id == 31;
     })[0];
@@ -94,15 +97,4 @@ function test_GuestsDoNotPreferSoybeanMilkWithCheats(db: GuestDb, stallPingSched
     });
     console.log(`Expect ${Object.keys(customers).length} == 0`);
     return Object.keys(customers).length == 0;
-}
-
-export default function testSuite_stalls(db: GuestDb, stallPingScheduler: StallPingScheduler) {
-    runTest(test_SubSandwichStationTrackHasExpectedCoords);
-    runTest(test_MoonJuiceStationTrackHasExpectedCoords);
-    runTest(test_MoonJuiceStallHasExpectedName);
-    runTest(test_SubSandwichStallFoundBySPS, [stallPingScheduler]);
-    runTest(test_GuestsPreferSoybeanMilk, [{ ...db }, stallPingScheduler]);
-    runTest(test_GuestsPreferSoybeanMilkWithCheats, [db, stallPingScheduler]);
-    runTest(test_GuestsDoNotPreferSoybeanMilkWithCheats, [db, stallPingScheduler]);
-    runTest(test_GuestsPreferEverythingWithCheats, [db, stallPingScheduler]);
-}
+});

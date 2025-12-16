@@ -15,10 +15,10 @@
  */
 import { GuestDb } from "../globals";
 import { StallPingScheduler } from "../stalls";
-import testSuite_guests from "./guests.test";
-import testSuite_stalls from "./stalls.test";
+import stalls from "./stalls.test";
+import guests from "./guests.test";
 
 export default function runTestSuites(db: GuestDb, stallPingScheduler: StallPingScheduler) {
-    testSuite_guests(db);
-    testSuite_stalls(db, stallPingScheduler);
+    stalls.runSuite(db, stallPingScheduler);
+    guests.runSuite(db);
 }

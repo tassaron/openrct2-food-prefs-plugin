@@ -16,23 +16,21 @@
 import { checkGuestForVoucher } from "../util";
 import { GuestDb } from "../globals";
 import { delayedCheckGuestForVoucher } from "../main";
-import runTest from "./runTest";
+import { TestSuite } from "./TestSuite";
 
-function test_CheckGuestForVoucher() {
+const suite = new TestSuite("guests");
+export default suite;
+
+suite.addTest("CheckGuestForVoucher", () => {
     const guest = map.getEntity(36);
     const voucher = checkGuestForVoucher(guest as Guest);
     console.log(`Expect "${voucher}" == "soybean_milk"`);
     return voucher == "soybean_milk";
-}
+});
 
-function test_DelayedCheckGuestForVoucherMutatesDb(db: GuestDb) {
+suite.addTest("DelayedCheckGuestForVoucherMutatesDb", (db: GuestDb) => {
     const guest = map.getEntity(36);
     delayedCheckGuestForVoucher(db, guest as Guest, 1);
     console.log(`Expect "${db[guest.id!]}" == "soybean_milk"`);
     return db[guest.id!] == "soybean_milk";
-}
-
-export default function testSuite_guests(db: GuestDb) {
-    runTest(test_CheckGuestForVoucher);
-    runTest(test_DelayedCheckGuestForVoucherMutatesDb, [{ ...db }]);
-}
+});
