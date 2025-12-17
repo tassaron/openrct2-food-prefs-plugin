@@ -197,7 +197,7 @@ export class StallPingScheduler {
                 );
                 // fill up our potential customers only on the 0th tick
                 const customers_ = StallPingScheduler.findCustomers(db, stall, tileCoords, this.cheats);
-                this.customers[stall.id] = Object.assign({}, customers_);
+                this.customers[stall.id] = { ...customers_ };
             }
 
             // tell guests in front of the stall to come here
