@@ -13,6 +13,7 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { consoleColour } from "../globals";
 
 export class TestSuite {
     name: string;
@@ -30,14 +31,15 @@ export class TestSuite {
         console.log(`~-~-~-~-~~-~-~-~-~~-~-~-~-~\n\nRunning ${name}...`);
         let result;
         result = testFunc(...args);
-
-        console.log(`${result ? "WOOHOO!" : "OUCH!"} ${name} ${result ? "PASSED :)" : "FAILED :("}`);
+        console.log(`${result ? `${consoleColour.green}` : `${consoleColour.red}`}${name} ${result ? "passed" : "failed"}`);
+        return result;
     }
 
     runSuite<A extends any[]>(...args: A) {
+        let failures = 0;
         for (const [name, testFunc] of this.tests) {
-            ////@ts-expect-error
-            this.runTest(name, testFunc, args);
+            if (!this.runTest(name, testFunc, args)) failures++;
         }
+        return failures;
     }
 }

@@ -13,12 +13,18 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { GuestDb } from "../globals";
-import { StallPingScheduler } from "../stalls";
+import { consoleColour, GuestDb } from "../globals";
 import stalls from "./stalls.test";
 import guests from "./guests.test";
 
-export default function runTestSuites(db: GuestDb, stallPingScheduler: StallPingScheduler) {
-    stalls.runSuite(db, stallPingScheduler);
-    guests.runSuite(db);
+export default function runTestSuites<T>(db: GuestDb, stallPingScheduler: T) {
+    let failures = 0;
+    failures += stalls.runSuite(db, stallPingScheduler);
+    failures += guests.runSuite(db);
+    if (failures) {
+        console.log(`${consoleColour.red}${failures} test${failures == 1 ? "" : "s"} failed${consoleColour.reset}`);
+    } else {
+        console.log(`${consoleColour.green}All tests passed!${consoleColour.reset}`);
+    }
+    return failures;
 }

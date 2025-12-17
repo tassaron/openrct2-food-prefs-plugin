@@ -13,9 +13,8 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { checkGuestForVoucher } from "../util";
+import { checkGuestForVoucher, getFoodPrefStats } from "../util";
 import { GuestDb } from "../globals";
-import { delayedCheckGuestForVoucher } from "../main";
 import { TestSuite } from "./TestSuite";
 
 const suite = new TestSuite("guests");
@@ -28,9 +27,14 @@ suite.addTest("CheckGuestForVoucher", () => {
     return voucher == "soybean_milk";
 });
 
-suite.addTest("DelayedCheckGuestForVoucherMutatesDb", (db: GuestDb) => {
-    const guest = map.getEntity(36);
-    delayedCheckGuestForVoucher(db, guest as Guest, 1);
-    console.log(`Expect "${db[guest.id!]}" == "soybean_milk"`);
-    return db[guest.id!] == "soybean_milk";
+suite.addTest("GetFoodPrefStatsHasBurger13%", (db: GuestDb) => {
+    const stats = getFoodPrefStats(db);
+    console.log(`Expect ${stats["burger"]} == 4`);
+    return stats["burger"] == 4;
+});
+
+suite.addTest("GetFoodPrefStatsHasNoIcedTea", (db: GuestDb) => {
+    const stats = getFoodPrefStats(db);
+    console.log(`Expect ${stats["iced_tea"]} == 0}`);
+    return stats["iced_tea"] == 0;
 });

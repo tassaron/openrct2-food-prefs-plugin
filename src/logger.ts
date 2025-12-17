@@ -16,6 +16,7 @@
 /// <reference path="../lib/duktape.d.ts" />
 
 import { plugin } from "./meta";
+import { consoleColour } from "./globals";
 
 const isDuktapeAvailable = typeof Duktape !== "undefined";
 
@@ -51,11 +52,13 @@ export class Logger {
     }
 
     warn(text: string) {
-        console.log(`${this.prefix} WARN] ${text}`);
+        console.log(`${this.prefix} ${consoleColour.yellow}WARN${consoleColour.reset}] ${text}`);
     }
 
     error(text: string) {
-        console.log(`${plugin.pluginName} v${plugin.pluginVersion} ${this.name} ERROR] ${text}`);
+        console.log(
+            `${plugin.pluginName} v${plugin.pluginVersion} ${this.name} ${consoleColour.red}ERROR${consoleColour.reset}] ${text}`,
+        );
     }
 }
 
