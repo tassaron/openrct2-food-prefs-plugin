@@ -19,7 +19,7 @@
  */
 
 import { Logger } from "./logger";
-import { GuestDb, GuestFoodItemType, FoodCheats } from "./globals";
+import { GuestDb, GuestFoodItemType, FoodCheats, GuestFoodArray } from "./globals";
 import { isValidGuest, getAvailableFood, arrayIncludes } from "./util";
 import {
     box,
@@ -93,6 +93,7 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
         availableFood = getAvailableFood(cheats.showUnresearchedFood ? "scenario" : "researched");
     };
 
+    const dropdownDisabled = store<boolean>(cheats.guestsIgnoreFavourite !== true ? true : false);
     let availableFood: GuestFoodItemType[] = [];
     updateAvailableFood();
     const listOfGuests = store<string[][]>([]);
@@ -103,6 +104,15 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
     listOfGuests.set(listOfGuests_);
     indexRecord.set(indexRecord_);
     const selectedGuest = store<number | null>(null);
+
+    const getDropdownIndex = function () {
+        for (let transgender = 0; transgender < GuestFoodArray.length; transgender++) {
+            if (GuestFoodArray[transgender] == cheats.guestsOnlyLike!) {
+                return transgender + 1;
+            }
+        }
+        return 0;
+    };
 
     return window({
         title: "Food Preferences",
@@ -153,26 +163,31 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
                         horizontal({
                             content: [
                                 checkbox({
-                                    disabled: false,
                                     text: "Guests only like:",
                                     tooltip: "normal guest preference is ignored in favour of the selected option",
                                     isChecked: cheats.guestsIgnoreFavourite,
                                     onChange: (checked: boolean) => {
                                         cheats.guestsIgnoreFavourite = checked;
+                                        dropdownDisabled.set(!checked);
                                         log.info(`cheats.guestsOnlyLike changed to ${checked ? "true" : "false"}`);
                                     },
                                 }),
                                 dropdown({
-                                    disabled: true,
-                                    items: ["Everything", ...getAvailableFood("scenario")],
+                                    selectedIndex: cheats.guestsOnlyLike ? getDropdownIndex() : 0,
+                                    disabled: compute(dropdownDisabled, () => dropdownDisabled.get()),
+                                    items: ["Everything", ...GuestFoodArray],
                                     onChange: (index: number) => {
-                                        log.info(`cheats.guestsOnlyLike changed to ${index}`);
+                                        log.info(`cheats.guestsOnlyLike changed to ${GuestFoodArray[index - 1]}?`);
+                                        if (index > 0) {
+                                            cheats.guestsOnlyLike = GuestFoodArray[index - 1];
+                                        } else {
+                                            cheats.guestsOnlyLike = undefined;
+                                        }
                                     },
                                 }),
                             ],
                         }),
                         checkbox({
-                            disabled: false,
                             isChecked: cheats.showUnresearchedFood,
                             text: "Show unknown foods in guest list",
                             tooltip: "show foods that have not been unlocked via research",
