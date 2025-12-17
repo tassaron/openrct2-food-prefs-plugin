@@ -18,7 +18,7 @@
  ** FUNCTIONS! Do not import anything aside from globals; it will cause bundling issues.
  */
 
-import { GuestFoodItemType, ShopItemFoodEnumMap, ShopItemFoodEnums, tileSize } from "./globals";
+import { GuestDb, GuestFoodArray, GuestFoodItemType, ShopItemFoodEnumMap, ShopItemFoodEnums, tileSize } from "./globals";
 
 export function createFavouriteFood(availableFoods: GuestFoodItemType[]) {
     const food: GuestFoodItemType = availableFoods[context.getRandom(0, availableFoods.length)];
@@ -98,4 +98,20 @@ export function checkGuestForVoucher(guestEntity: Guest): GuestFoodItemType | un
         return (potentialVoucher as FoodDrinkVoucher).item as GuestFoodItemType;
     }
     return false;
+}
+
+export function getFoodPrefStats(db: GuestDb) {
+    const stats = GuestFoodArray.reduce((obj, key: GuestFoodItemType) => ({ ...obj, [key]: 0 }), {}) as Record<
+        GuestFoodItemType,
+        number
+    >;
+    const keys = Object.keys(db);
+    for (let key of keys.map(Number)) {
+        stats[db[key]]++;
+    }
+    for (const food of GuestFoodArray) {
+        if (stats[food] < 1) continue;
+        stats[food] = Math.round((stats[food] / keys.length) * 100);
+    }
+    return stats;
 }

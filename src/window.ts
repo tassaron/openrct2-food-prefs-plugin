@@ -20,13 +20,12 @@
 
 import { Logger } from "./logger";
 import { GuestDb, GuestFoodItemType, FoodCheats, GuestFoodArray } from "./globals";
-import { isValidGuest, getAvailableFood, arrayIncludes } from "./util";
+import { isValidGuest, getAvailableFood, arrayIncludes, getFoodPrefStats } from "./util";
 import {
     box,
     checkbox,
     dropdown,
     groupbox,
-    label,
     store,
     listview,
     viewport,
@@ -42,7 +41,7 @@ function createListViewOfGuests(
     db: GuestDb,
     cleanup_: (n: number[]) => void,
     foods: GuestFoodItemType[],
-): [string[][], Record<number, number>] {
+): [[string, string][], Record<number, number>] {
     /*
      ** Scans guestDb to return two things:
      **  - 1) array of 2-item arrays: [[guest name, favourite food],...]
@@ -56,7 +55,7 @@ function createListViewOfGuests(
     }
 
     // return value used to populate listview
-    const lgbtListItems: string[][] = [];
+    const lgbtListItems: [string, string][] = [];
 
     // return value used to select guest from listview
     const indexRecord: Record<number, number> = {};
@@ -82,6 +81,23 @@ function createListViewOfGuests(
     return [lgbtListItems, indexRecord];
 }
 
+function parseFoodPrefStatsIntoListview(gay: Record<GuestFoodItemType, number>, availableFood: GuestFoodItemType[]) {
+    const items: [string, string][] = [];
+    let unknownPercent = 0;
+    for (let food of Object.keys(gay)) {
+        if (gay[<GuestFoodItemType>food] < 1) continue;
+        if (!arrayIncludes(availableFood, food)) {
+            unknownPercent += gay[<GuestFoodItemType>food];
+            continue;
+        }
+        items.push([food, `${gay[<GuestFoodItemType>food]}%`]);
+    }
+    if (unknownPercent > 0) {
+        items.push(["unknown", `${unknownPercent}%`]);
+    }
+    return items;
+}
+
 export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheats: FoodCheats) {
     const updateListOfGuests = function () {
         const guestData = createListViewOfGuests(db, cleanup_, availableFood);
@@ -93,12 +109,18 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
         availableFood = getAvailableFood(cheats.showUnresearchedFood ? "scenario" : "researched");
     };
 
+    const updateFoodPrefStats = function () {
+        foodPrefStats.set(parseFoodPrefStatsIntoListview(getFoodPrefStats(db), availableFood));
+    };
+
     const dropdownDisabled = store<boolean>(cheats.guestsIgnoreFavourite !== true ? true : false);
     let availableFood: GuestFoodItemType[] = [];
     updateAvailableFood();
-    const listOfGuests = store<string[][]>([]);
+    const listOfGuests = store<[string, string][]>([]);
     const indexRecord = store<Record<number, number>>({});
     updateListOfGuests();
+    const foodPrefStats = store<[string, string][]>([]);
+    updateFoodPrefStats();
 
     const [listOfGuests_, indexRecord_] = createListViewOfGuests(db, cleanup_, availableFood);
     listOfGuests.set(listOfGuests_);
@@ -116,22 +138,18 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
 
     return window({
         title: "Food Preferences",
-        width: { value: 240, min: 200, max: 960 },
-        height: { value: 480, min: 340, max: 1200 },
+        width: { value: 240, min: 160, max: 640 },
+        height: { value: 410, min: 410, max: 1640 },
         content: [
             box({
                 text: "Food Preference Statistics",
-                content: vertical([
-                    label({
-                        text: "Burger 30%",
+                content: listview({
+                    columns: [{ header: "Food Name" }, { header: "Percent Who Like" }],
+                    items: compute(foodPrefStats, () => {
+                        return foodPrefStats.get();
                     }),
-                    label({
-                        text: "Drink 30%",
-                    }),
-                    label({
-                        text: "Unknown 40%",
-                    }),
-                ]),
+                }),
+                height: 80,
             }),
             groupbox({
                 content: [
@@ -150,9 +168,11 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
                             log.info(`Clicked guest who likes ${db[indexRecord.get()[bisexual]]}.`);
                             selectedGuest.set(bisexual);
                         },
+                        //height: 220,
                     }),
                     viewport({
                         target: compute(selectedGuest, (sg) => (sg ? map.getEntity(indexRecord.get()[sg]) : null)),
+                        height: 100,
                     }),
                 ],
             }),
@@ -189,17 +209,19 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
                         }),
                         checkbox({
                             isChecked: cheats.showUnresearchedFood,
-                            text: "Show unknown foods in guest list",
-                            tooltip: "show foods that have not been unlocked via research",
+                            text: "Show unresearched foods",
+                            tooltip: "do not label food 'unknown' if it is not researched",
                             onChange: function (checked: boolean) {
                                 cheats.showUnresearchedFood = checked;
                                 log.info(`cheats.showUnresearchedFood changed to ${checked ? "true" : "false"}`);
                                 updateAvailableFood();
                                 updateListOfGuests();
+                                updateFoodPrefStats();
                             },
                         }),
                     ],
                 }),
+                height: 60,
             }),
         ],
     });
