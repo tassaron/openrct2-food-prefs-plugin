@@ -20,7 +20,7 @@ import { arrayIncludes, createFavouriteFood, getAvailableFood } from "./util";
 import { GuestDb, GuestFoodArray, GuestFoodItemType, tileSize } from "./globals";
 import { Logger } from "./logger";
 
-const log = new Logger("guests", 2);
+const log = new Logger("guests", 0);
 
 export function createGuestDb() {
     const db: GuestDb = {};

@@ -31,7 +31,7 @@ import {
 } from "./globals";
 import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile, addMissingFoodPrefs } from "./guests";
 
-const log = new Logger("stalls", 2);
+const log = new Logger("stalls", 0);
 
 export class StallPingScheduler {
     /*

@@ -37,7 +37,7 @@ import {
     WindowTemplate,
 } from "openrct2-flexui";
 
-const log = new Logger("window", 2);
+const log = new Logger("window", 0);
 
 function createListViewOfGuests(db: GuestDb, foods: GuestFoodItemType[]): [[string, string][], Record<number, number>] {
     /*
