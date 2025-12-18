@@ -13,7 +13,9 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { GuestDb } from "../globals";
 import { checkGuestForVoucher, createGuestDb, getFoodPrefStats } from "../guests";
+import { StallPingScheduler } from "../stalls";
 import { TestSuite } from "./TestSuite";
 
 const suite = new TestSuite("guests");
@@ -26,6 +28,13 @@ suite.addTest("CheckGuestForVoucher", () => {
     return voucher == "soybean_milk";
 });
 
+suite.addTest("SPSUsesCheckGuestForVoucher", (_, stallPingScheduler: StallPingScheduler) => {
+    const db: GuestDb = {};
+    StallPingScheduler.findCustomers(db, stallPingScheduler.stalls[31][0], stallPingScheduler.stalls[31][1], {});
+    console.log(`Expect "${db[36]}" == "soybean_milk"`);
+    return db[36] == "soybean_milk";
+});
+
 suite.addTest("GetFoodPrefStatsHasBurger33%", () => {
     const stats = getFoodPrefStats({ 1: "burger", 2: "ice_cream", 3: "popcorn" });
     console.log(`Expect ${stats["burger"]} == 33`);
@@ -34,6 +43,6 @@ suite.addTest("GetFoodPrefStatsHasBurger33%", () => {
 
 suite.addTest("GetFoodPrefStatsHasNoIcedTea", () => {
     const stats = getFoodPrefStats(createGuestDb());
-    console.log(`Expect ${stats["iced_tea"]} == 0}`);
+    console.log(`Expect ${stats["iced_tea"]} == 0`);
     return stats["iced_tea"] == 0;
 });

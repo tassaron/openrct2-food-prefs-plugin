@@ -13,14 +13,14 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { consoleColour, GuestDb } from "../globals";
+import { consoleColour } from "../globals";
 import stalls from "./stalls.test";
 import guests from "./guests.test";
 
-export default function runTestSuites<T>(db: GuestDb, stallPingScheduler: T) {
+export default function runTestSuites<A, T>(db: A, stallPingScheduler: T) {
     let failures = 0;
     failures += stalls.runSuite(db, stallPingScheduler);
-    failures += guests.runSuite(db);
+    failures += guests.runSuite(db, stallPingScheduler);
     if (failures) {
         console.log(`${consoleColour.red}${failures} test${failures == 1 ? "" : "s"} failed${consoleColour.reset}`);
     } else {

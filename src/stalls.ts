@@ -127,6 +127,9 @@ export class StallPingScheduler {
     }
 
     static findCustomers(db: GuestDb, stall: Ride, tileCoords: CoordsXYZD, cheats: FoodCheats) {
+        /*
+        mutates db now
+        */
         const nearbyGuests = getGuestsOnNeighbouringTile(tileCoords);
         log.verbose(`found ${nearbyGuests.length} guests next to ${stall.id}`);
         const potentialCustomers: Record<number, { guest: Guest; originalHunger: number; originalThirst: number }> = {};
