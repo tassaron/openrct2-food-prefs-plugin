@@ -29,7 +29,7 @@ import {
     FoodCheats,
     GuestFoodItemType,
 } from "./globals";
-import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile } from "./util";
+import { setGuestDestination, setGuestDirection, getGuestsOnNeighbouringTile, addMissingFoodPrefs } from "./guests";
 
 const log = new Logger("stalls", 2);
 
@@ -137,6 +137,9 @@ export class StallPingScheduler {
                 originalThirst: guest_.thirst,
             };
         }
+
+        addMissingFoodPrefs(db, nearbyGuests);
+
         // skim off the irrelevant guests who aren't happy, don't like the food, etc.
         var shopFood: GuestFoodItemType = ShopItemFoodEnumMap[stall.object.shopItem];
 

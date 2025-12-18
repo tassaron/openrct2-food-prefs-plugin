@@ -15,7 +15,7 @@
  */
 import { GuestDb, GuestFoodItemType, ShopItemFoodEnumMap, tileSize } from "../globals";
 import { StallPingScheduler } from "../stalls";
-import { getGuestsOnNeighbouringTile } from "../util";
+import { getGuestsOnNeighbouringTile } from "../guests";
 import { TestSuite } from "./TestSuite";
 
 const suite = new TestSuite("stalls");
@@ -54,9 +54,9 @@ suite.addTest("GuestsPreferSoybeanMilk", (db: GuestDb, stallPingScheduler: Stall
         return stall[0].id == 31;
     })[0];
     const nearbyGuests = getGuestsOnNeighbouringTile(coords);
-    const guest = <number>nearbyGuests[0].id;
     const modifiedEntries: Record<number, GuestFoodItemType> = {};
-    modifiedEntries[guest] = "soybean_milk";
+    modifiedEntries[<number>nearbyGuests[0].id] = "soybean_milk";
+    modifiedEntries[<number>nearbyGuests[1].id] = "burger";
     const customers = StallPingScheduler.findCustomers(Object.assign(db, modifiedEntries), ride, coords, {});
     console.log(`Expect ${Object.keys(customers).length} == 1`);
     return Object.keys(customers).length == 1;

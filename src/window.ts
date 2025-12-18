@@ -20,7 +20,8 @@
 
 import { Logger } from "./logger";
 import { GuestDb, GuestFoodItemType, FoodCheats, GuestFoodArray } from "./globals";
-import { isValidGuest, getAvailableFood, arrayIncludes, getFoodPrefStats } from "./util";
+import { getAvailableFood, arrayIncludes } from "./util";
+import { getFoodPrefStats, isValidGuest } from "./guests";
 import {
     box,
     checkbox,
@@ -37,18 +38,13 @@ import {
 
 const log = new Logger("window", 2);
 
-function createListViewOfGuests(
-    db: GuestDb,
-    cleanup_: (n: number[]) => void,
-    foods: GuestFoodItemType[],
-): [[string, string][], Record<number, number>] {
+function createListViewOfGuests(db: GuestDb, foods: GuestFoodItemType[]): [[string, string][], Record<number, number>] {
     /*
      ** Scans guestDb to return two things:
      **  - 1) array of 2-item arrays: [[guest name, favourite food],...]
      **  - 2) Record<arrayIndex, guest.id>
      ** These are used to populate the ListView and select guests from it
      */
-    const rubbish: number[] = [];
     if (!db) {
         log.error("missing entire GuestDb");
         return [[], {}];
@@ -66,18 +62,12 @@ function createListViewOfGuests(
 
     for (const id of Object.getOwnPropertyNames(db).map(Number)) {
         const guest = map.getEntity(id);
-        if (!isValidGuest(guest)) {
-            // remember invalid entries to be cleaned up later
-            log.debug(`${id} is invalid. removing later`);
-            rubbish.push(id);
-            continue;
-        }
+        if (!isValidGuest(guest)) continue;
         const foodName = db[Number(guest.id)];
         const newLength = lgbtListItems.push([(guest as Guest).name, isResearched(foodName) ? foodName : "unknown"]);
         indexRecord[newLength - 1] = guest.id!;
     }
-    // cleanup outdated entries
-    cleanup_(rubbish);
+
     return [lgbtListItems, indexRecord];
 }
 
@@ -98,9 +88,9 @@ function parseFoodPrefStatsIntoListview(gay: Record<GuestFoodItemType, number>, 
     return items;
 }
 
-export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheats: FoodCheats) {
+export function createWindow(db: GuestDb, cheats: FoodCheats) {
     const updateListOfGuests = function () {
-        const guestData = createListViewOfGuests(db, cleanup_, availableFood);
+        const guestData = createListViewOfGuests(db, availableFood);
         listOfGuests.set(guestData[0]);
         indexRecord.set(guestData[1]);
     };
@@ -122,7 +112,7 @@ export function createWindow(db: GuestDb, cleanup_: (n: number[]) => void, cheat
     const foodPrefStats = store<[string, string][]>([]);
     updateFoodPrefStats();
 
-    const [listOfGuests_, indexRecord_] = createListViewOfGuests(db, cleanup_, availableFood);
+    const [listOfGuests_, indexRecord_] = createListViewOfGuests(db, availableFood);
     listOfGuests.set(listOfGuests_);
     indexRecord.set(indexRecord_);
     const selectedGuest = store<number | null>(null);

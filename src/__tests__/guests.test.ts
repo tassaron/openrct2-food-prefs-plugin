@@ -13,8 +13,7 @@
  **    You should have received a copy of the GNU General Public License
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import { checkGuestForVoucher, getFoodPrefStats } from "../util";
-import { GuestDb } from "../globals";
+import { checkGuestForVoucher, createGuestDb, getFoodPrefStats } from "../guests";
 import { TestSuite } from "./TestSuite";
 
 const suite = new TestSuite("guests");
@@ -27,14 +26,14 @@ suite.addTest("CheckGuestForVoucher", () => {
     return voucher == "soybean_milk";
 });
 
-suite.addTest("GetFoodPrefStatsHasBurger13%", (db: GuestDb) => {
-    const stats = getFoodPrefStats(db);
-    console.log(`Expect ${stats["burger"]} == 4`);
-    return stats["burger"] == 4;
+suite.addTest("GetFoodPrefStatsHasBurger33%", () => {
+    const stats = getFoodPrefStats({ 1: "burger", 2: "ice_cream", 3: "popcorn" });
+    console.log(`Expect ${stats["burger"]} == 33`);
+    return stats["burger"] == 33;
 });
 
-suite.addTest("GetFoodPrefStatsHasNoIcedTea", (db: GuestDb) => {
-    const stats = getFoodPrefStats(db);
+suite.addTest("GetFoodPrefStatsHasNoIcedTea", () => {
+    const stats = getFoodPrefStats(createGuestDb());
     console.log(`Expect ${stats["iced_tea"]} == 0}`);
     return stats["iced_tea"] == 0;
 });
