@@ -34,6 +34,7 @@ import {
     vertical,
     horizontal,
     compute,
+    WindowTemplate,
 } from "openrct2-flexui";
 
 const log = new Logger("window", 2);
@@ -88,20 +89,28 @@ function parseFoodPrefStatsIntoListview(gay: Record<GuestFoodItemType, number>, 
     return items;
 }
 
-export function createWindow(db: GuestDb, cheats: FoodCheats) {
-    const updateListOfGuests = function () {
+export function createWindow(db: GuestDb, cheats: FoodCheats): [WindowTemplate, (db: GuestDb) => void] {
+    const updateListOfGuests = () => {
         const guestData = createListViewOfGuests(db, availableFood);
         listOfGuests.set(guestData[0]);
         indexRecord.set(guestData[1]);
     };
 
-    const updateAvailableFood = function () {
+    const updateAvailableFood = () => {
         availableFood = getAvailableFood(cheats.showUnresearchedFood ? "scenario" : "researched");
     };
 
-    const updateFoodPrefStats = function () {
+    const updateFoodPrefStats = () => {
         foodPrefStats.set(parseFoodPrefStatsIntoListview(getFoodPrefStats(db), availableFood));
     };
+
+    function updateWindow(db_: GuestDb) {
+        /* not anonymous because we give this function away like a gift */
+        Object.assign(db, db_);
+        updateAvailableFood();
+        updateListOfGuests();
+        updateFoodPrefStats();
+    }
 
     const dropdownDisabled = store<boolean>(cheats.guestsIgnoreFavourite !== true ? true : false);
     let availableFood: GuestFoodItemType[] = [];
@@ -117,7 +126,10 @@ export function createWindow(db: GuestDb, cheats: FoodCheats) {
     indexRecord.set(indexRecord_);
     const selectedGuest = store<number | null>(null);
 
-    const getDropdownIndex = function () {
+    const cheatGuestsIgnoreFavourite = store<boolean>(cheats.guestsIgnoreFavourite ? cheats.guestsIgnoreFavourite : false);
+    const cheatShowUnresearchedFood = store<boolean>(cheats.showUnresearchedFood ? cheats.showUnresearchedFood : false);
+
+    const getDropdownIndex = () => {
         for (let transgender = 0; transgender < GuestFoodArray.length; transgender++) {
             if (GuestFoodArray[transgender] == cheats.guestsOnlyLike!) {
                 return transgender + 1;
@@ -125,8 +137,9 @@ export function createWindow(db: GuestDb, cheats: FoodCheats) {
         }
         return 0;
     };
+    const dropdownIndex = store<number>(getDropdownIndex());
 
-    return window({
+    const window_ = window({
         title: "Food Preferences",
         width: { value: 240, min: 160, max: 640 },
         height: { value: 410, min: 410, max: 1640 },
@@ -175,19 +188,21 @@ export function createWindow(db: GuestDb, cheats: FoodCheats) {
                                 checkbox({
                                     text: "Guests only like:",
                                     tooltip: "normal guest preference is ignored in favour of the selected option",
-                                    isChecked: cheats.guestsIgnoreFavourite,
+                                    isChecked: compute(cheatGuestsIgnoreFavourite, () => cheatGuestsIgnoreFavourite.get()),
                                     onChange: (checked: boolean) => {
                                         cheats.guestsIgnoreFavourite = checked;
+                                        cheatGuestsIgnoreFavourite.set(checked);
                                         dropdownDisabled.set(!checked);
                                         log.info(`cheats.guestsOnlyLike changed to ${checked ? "true" : "false"}`);
                                     },
                                 }),
                                 dropdown({
-                                    selectedIndex: cheats.guestsOnlyLike ? getDropdownIndex() : 0,
-                                    disabled: compute(dropdownDisabled, () => dropdownDisabled.get()),
                                     items: ["Everything", ...GuestFoodArray],
+                                    disabled: compute(dropdownDisabled, () => dropdownDisabled.get()),
+                                    selectedIndex: compute(dropdownIndex, () => dropdownIndex.get()),
                                     onChange: (index: number) => {
                                         log.info(`cheats.guestsOnlyLike changed to ${GuestFoodArray[index - 1]}?`);
+                                        dropdownIndex.set(index);
                                         if (index > 0) {
                                             cheats.guestsOnlyLike = GuestFoodArray[index - 1];
                                         } else {
@@ -198,15 +213,16 @@ export function createWindow(db: GuestDb, cheats: FoodCheats) {
                             ],
                         }),
                         checkbox({
-                            isChecked: cheats.showUnresearchedFood,
+                            isChecked: compute(cheatShowUnresearchedFood, () => {
+                                return cheatShowUnresearchedFood.get();
+                            }),
                             text: "Show unresearched foods",
                             tooltip: "do not label food 'unknown' if it is not researched",
                             onChange: function (checked: boolean) {
                                 cheats.showUnresearchedFood = checked;
+                                cheatShowUnresearchedFood.set(checked);
                                 log.info(`cheats.showUnresearchedFood changed to ${checked ? "true" : "false"}`);
-                                updateAvailableFood();
-                                updateListOfGuests();
-                                updateFoodPrefStats();
+                                updateWindow(db);
                             },
                         }),
                     ],
@@ -215,4 +231,5 @@ export function createWindow(db: GuestDb, cheats: FoodCheats) {
             }),
         ],
     });
+    return [window_, updateWindow];
 }

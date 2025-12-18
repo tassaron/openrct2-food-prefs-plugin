@@ -17,18 +17,14 @@
 import { plugin } from "./meta";
 import { FoodCheats } from "./globals";
 import { StallPingScheduler } from "./stalls";
-import { Logger } from "./logger";
 import { createWindow } from "./window";
 import { WindowTemplate } from "openrct2-flexui";
 import runTestSuites from "./__tests__/TestRunner";
 import { createGuestDb, scheduledCleanup } from "./guests";
 
-const log = new Logger("main", 0);
-
-function onClickMenuItem(window: () => WindowTemplate) {
+function onClickMenuItem(window: WindowTemplate) {
     // Occurs when player clicks our menu item
-    log.verbose("Creating new WindowTemplate object");
-    window().open();
+    window.open();
 }
 
 function onActionExecuted(stallPingScheduler: StallPingScheduler, e: GameActionEventArgs) {
@@ -58,18 +54,16 @@ export function main() {
     let cleanUpTaskRunning: number | null = null;
     context.subscribe("interval.day", () => {
         stallPingScheduler.newDay(db, cheats);
-        if (cleanUpTaskRunning === null)
+        updateWindow(db);
+        if (cleanUpTaskRunning === null) {
             cleanUpTaskRunning = context.setTimeout(() => {
                 scheduledCleanup(db);
                 cleanUpTaskRunning = null;
             }, 3500);
+        }
     });
     context.subscribe("action.execute", (e: GameActionEventArgs) => onActionExecuted(stallPingScheduler, e));
-
-    // Create window creator :P
-    const windowCreator = () => {
-        return createWindow(db, cheats);
-    };
+    const [window_, updateWindow] = createWindow(db, cheats);
 
     // Register a menu item under the map icon:
     if (typeof ui !== "undefined") {
@@ -77,9 +71,9 @@ export function main() {
             id: "food-prefs.openwindow",
             text: "Open Food Preferences window",
             bindings: ["CTRL+F"],
-            callback: () => onClickMenuItem(windowCreator),
+            callback: () => onClickMenuItem(window_),
         });
-        ui.registerMenuItem("Food Preferences", () => onClickMenuItem(windowCreator));
+        ui.registerMenuItem("Food Preferences", () => onClickMenuItem(window_));
     }
 
     // run tests one second after loading
