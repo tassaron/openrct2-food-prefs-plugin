@@ -16,6 +16,7 @@
 import { GuestDb } from "../globals";
 import { checkGuestForVoucher, createGuestDb, getFoodPrefStats } from "../guests";
 import { StallPingScheduler } from "../stalls";
+import { arrayIncludes, getAvailableFood } from "../util";
 import { TestSuite } from "./TestSuite";
 
 const suite = new TestSuite("guests");
@@ -41,8 +42,20 @@ suite.addTest("GetFoodPrefStatsHasBurger33%", () => {
     return stats["burger"] == 33;
 });
 
-suite.addTest("GetFoodPrefStatsHasNoIcedTea", () => {
-    const stats = getFoodPrefStats(createGuestDb());
-    console.log(`Expect ${stats["iced_tea"]} == 0`);
-    return stats["iced_tea"] == 0;
+suite.addTest("AvailableFoodScenarioHasNoIcedTea", () => {
+    const foodAvailable = getAvailableFood("scenario");
+    console.log(`Expect (arrayIncludes) ${arrayIncludes(foodAvailable, "iced_tea")} === false`);
+    return arrayIncludes(foodAvailable, "iced_tea") === false;
+});
+
+suite.addTest("AvailableFoodScenarioHasWontonSoup", () => {
+    const foodAvailable = getAvailableFood("scenario");
+    console.log(`Expect (arrayIncludes) ${arrayIncludes(foodAvailable, "wonton_soup")} === true`);
+    return arrayIncludes(foodAvailable, "wonton_soup") === true;
+});
+
+suite.addTest("AvailableFoodResearchedHasNoWontonSoup", () => {
+    const foodAvailable = getAvailableFood("researched");
+    console.log(`Expect (arrayIncludes) ${arrayIncludes(foodAvailable, "wonton_soup")} === false`);
+    return arrayIncludes(foodAvailable, "wonton_soup") === false;
 });
