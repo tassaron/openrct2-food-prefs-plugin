@@ -69,6 +69,11 @@ function createListViewOfGuests(db: GuestDb, foods: GuestFoodItemType[]): [[stri
         indexRecord[newLength - 1] = guest.id!;
     }
 
+    if (lgbtListItems.length == 0) {
+        lgbtListItems.push(["No one yet", "Maybe tomorrow"]);
+        indexRecord[0] = -1;
+    }
+
     return [lgbtListItems, indexRecord];
 }
 
@@ -83,8 +88,11 @@ function parseFoodPrefStatsIntoListview(gay: Record<GuestFoodItemType, number>, 
         }
         items.push([food, `${gay[<GuestFoodItemType>food]}%`]);
     }
+    if (items.length == 0) {
+        unknownPercent = 100;
+    }
     if (unknownPercent > 0) {
-        items.push(["unknown", `${unknownPercent}%`]);
+        items.push([unknownPercent == 100 ? "no data" : "unknown", `${unknownPercent}%`]);
     }
     return items;
 }
@@ -158,6 +166,7 @@ export function createWindow(db: GuestDb, cheats: FoodCheats): [WindowTemplate, 
                 content: [
                     listview({
                         columns: [
+                            // #TODO enable sorting (need to change how indexRecord works)
                             { header: "Guest", canSort: false },
                             {
                                 header: "Favourite Item",
@@ -168,10 +177,10 @@ export function createWindow(db: GuestDb, cheats: FoodCheats): [WindowTemplate, 
                             return listOfGuests.get();
                         }),
                         onClick: (bisexual: number, _column: number) => {
-                            log.info(`Clicked guest who likes ${db[indexRecord.get()[bisexual]]}.`);
-                            selectedGuest.set(bisexual);
+                            const food = db[indexRecord.get()[bisexual]];
+                            log.info(`Clicked guest who likes ${food}.`);
+                            selectedGuest.set(food ? bisexual : null);
                         },
-                        //height: 220,
                     }),
                     viewport({
                         target: compute(selectedGuest, (sg) => (sg ? map.getEntity(indexRecord.get()[sg]) : null)),
