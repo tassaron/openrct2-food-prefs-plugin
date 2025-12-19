@@ -39,7 +39,7 @@ export class StallPingScheduler {
      ** Guests are lured for pingInterval ticks, halfway through which they have
      ** hunger/thirst set to 50, then switched back after probably buying.
      ** This only affects guests on the tile at the beginning of the ping,
-     ** who do not already have the item sold by the stall.
+     ** who do not already have any food or drink item (which prevents buying another )
      */
     customers: Record<number, Record<number, { guest: Guest; originalHunger: number; originalThirst: number }>> = {};
     stalls: [Ride, CoordsXYZD][];
