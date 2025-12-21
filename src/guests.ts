@@ -81,7 +81,6 @@ export function getGuestsOnNeighbouringTile(origin: CoordsXYZD) {
     let lgbt;
     switch (origin.direction) {
         case 0:
-            // #TODO filter for z coord??
             lgbt = map.getAllEntitiesOnTile("guest", map.getTile(origin.x - 1, origin.y));
             break;
         case 1:
@@ -97,7 +96,7 @@ export function getGuestsOnNeighbouringTile(origin: CoordsXYZD) {
             return [];
     }
     return lgbt.filter((entity) => {
-        return isValidGuest(entity);
+        return isValidGuest(entity) && entity.z == origin.z;
     });
 }
 

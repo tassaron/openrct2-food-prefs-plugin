@@ -98,3 +98,27 @@ suite.addTest("GuestsDoNotPreferSoybeanMilkWithCheats", (db: GuestDb, stallPingS
     console.log(`Expect ${Object.keys(customers).length} == 0`);
     return Object.keys(customers).length == 0;
 });
+
+suite.addTest(
+    "Guest at higher z-level (pretzel) is not affected by lower z-level stall (hot dog)",
+    (_, stallPingScheduler: StallPingScheduler) => {
+        const [__, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
+            return stall[0].id == 42;
+        })[0];
+        const nearbyGuests = getGuestsOnNeighbouringTile(coords);
+        console.log(`Expect ${nearbyGuests.length} == 1`);
+        return nearbyGuests.length == 1;
+    },
+);
+
+suite.addTest(
+    "Guest at lower z-level (hot dog) is not affected by higher z-level stall (pretzel)",
+    (_, stallPingScheduler: StallPingScheduler) => {
+        const [__, coords] = stallPingScheduler.stalls.filter((stall: [Ride, CoordsXYZD]) => {
+            return stall[0].id == 13;
+        })[0];
+        const nearbyGuests = getGuestsOnNeighbouringTile(coords);
+        console.log(`Expect ${nearbyGuests.length} == 1`);
+        return nearbyGuests.length == 1;
+    },
+);
