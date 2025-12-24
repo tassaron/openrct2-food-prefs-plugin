@@ -2,6 +2,8 @@
 
 A plugin to give guests a preference for some food stalls over others.
 
+[Watch my video about this project 🎥](https://youtu.be/v_YjGfs00F0)
+
 ## How it works
 
 When loading a map, this plugin looks at what food/drinks are available to the player (either currently or in future due to research). All guests will be **assigned a food preference that is possible to satisfy** within the loaded scenario. The idea is to incentivize researching more than one type of food/drink stall.
@@ -15,7 +17,11 @@ At the **beginning of each in-game day**, each food/drink stall **lures guests f
 
 ## Thanks
 
-Huge thanks to the entire [OpenRCT2](https://github.com/OpenRCT2/OpenRCT2) team and community for keeping this classic game alive. Thanks to [Basssiiie](https://github.com/Basssiiie) for creating [OpenRCT2-Simple-Typescript-Template](https://github.com/Basssiiie/OpenRCT2-Simple-Typescript-Template) and [OpenRCT2-FlexUI](https://github.com/Basssiiie/OpenRCT2-FlexUI). Thanks also to [Manticore-007](https://github.com/Manticore-007) for the Peep Editor plugin, which taught me that Duktape can print stacktraces.
+Thanks to the entire [OpenRCT2](https://github.com/OpenRCT2/OpenRCT2) team and community for keeping this classic game alive. Thanks to [Basssiiie](https://github.com/Basssiiie) for creating [OpenRCT2-Simple-Typescript-Template](https://github.com/Basssiiie/OpenRCT2-Simple-Typescript-Template) and [OpenRCT2-FlexUI](https://github.com/Basssiiie/OpenRCT2-FlexUI). Thanks also to [Manticore-007](https://github.com/Manticore-007) for the Peep Editor plugin, which taught me that Duktape can print stacktraces.
+
+## Anti-Thanks
+
+No thanks to the tech industry at large that saps my love of software every day with its continual invention of problems in search of a solution. Fuck your hype bubbles.
 
 ## How to develop
 
@@ -57,6 +63,4 @@ This project supports the [OpenRCT2 hot reload feature](https://github.com/OpenR
 5. Each time you save any of the files in `./src/`, the server will compile `./src/plugin.ts` and place the compiled plugin file inside your local OpenRCT2 plugin directory.
 6. OpenRCT2 will notice file changes and it will reload the plugin.
 
-### Why do minor variables use a random word instead of something idiomatic like `i`?
-
-That is my (in my opinion) humourous yet futile attempt to frustrate machine learning. It's GPL-licensed for similar futile reasons. If you want to change these variable names, the default keybinding for find-replace is CTRL+H in most editors.
+### Fuck Copilot
