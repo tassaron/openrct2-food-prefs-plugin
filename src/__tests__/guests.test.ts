@@ -14,7 +14,7 @@
  **    along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { GuestDb } from "../globals";
-import { checkGuestForVoucher, createGuestDb, getFoodPrefStats } from "../guests";
+import { checkGuestForVoucher, getFoodPrefStats } from "../guests";
 import { StallPingScheduler } from "../stalls";
 import { arrayIncludes, getAvailableFood } from "../util";
 import { TestSuite } from "./TestSuite";

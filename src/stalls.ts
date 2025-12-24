@@ -128,7 +128,7 @@ export class StallPingScheduler {
 
     static findCustomers(db: GuestDb, stall: Ride, tileCoords: CoordsXYZD, cheats: FoodCheats) {
         /*
-        mutates db now
+        mutates db if the customer IDs found do not exist in it as keys
         */
         const nearbyGuests = getGuestsOnNeighbouringTile(tileCoords);
         log.verbose(`found ${nearbyGuests.length} guests next to ${stall.id}`);
@@ -211,7 +211,6 @@ export class StallPingScheduler {
                 x: tileCoords.x,
                 y: tileCoords.y,
             };
-            // #FIXME clearly wrong somehow
             switch (tileCoords.direction) {
                 case 0:
                     coords.x += tileSize;
