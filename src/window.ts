@@ -149,11 +149,12 @@ export function createWindow(db: GuestDb, cheats: FoodCheats): [WindowTemplate, 
 
     const window_ = window({
         title: "Food Preferences",
-        width: { value: 240, min: 160, max: 640 },
+        width: { value: 240, min: 180, max: 640 },
         height: { value: 410, min: 410, max: 1640 },
+        colours: [13, 15],
         content: [
             box({
-                text: "Food Preference Statistics",
+                text: "Food Preference by Category",
                 content: listview({
                     columns: [{ header: "Food Name" }, { header: "Percent Who Like" }],
                     items: compute(foodPrefStats, () => {
@@ -163,6 +164,7 @@ export function createWindow(db: GuestDb, cheats: FoodCheats): [WindowTemplate, 
                 height: 80,
             }),
             groupbox({
+                text: "Food Preference by Guest",
                 content: [
                     listview({
                         columns: [
@@ -210,7 +212,7 @@ export function createWindow(db: GuestDb, cheats: FoodCheats): [WindowTemplate, 
                                     disabled: compute(dropdownDisabled, () => dropdownDisabled.get()),
                                     selectedIndex: compute(dropdownIndex, () => dropdownIndex.get()),
                                     onChange: (index: number) => {
-                                        log.info(`cheats.guestsOnlyLike changed to ${GuestFoodArray[index - 1]}?`);
+                                        log.info(`cheats.guestsOnlyLike changed to ${GuestFoodArray[index - 1]}`);
                                         dropdownIndex.set(index);
                                         if (index > 0) {
                                             cheats.guestsOnlyLike = GuestFoodArray[index - 1];
