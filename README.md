@@ -4,16 +4,19 @@ A plugin to give guests a preference for some food stalls over others.
 
 [Watch my video about this project 🎥](https://youtu.be/v_YjGfs00F0)
 
+![screenshot of window added by plugin showing information about guest food preferences](screenshot.png)
+
 ## How it works
 
 When loading a map, this plugin looks at what food/drinks are available to the player (either currently or in future due to research). All guests will be **assigned a food preference that is possible to satisfy** within the loaded scenario. The idea is to incentivize researching more than one type of food/drink stall.
 
-At the **beginning of each in-game day**, each food/drink stall **lures guests for 3 seconds** (120 game ticks), setting and resetting their hunger/thirst appropriately so the guest will buy (assuming the item is not too expensive for them). This only works on the tile directly in front of a stall, ignores stalls that are closed, and ignores guests who already have an item that would prevent them from buying another.
+At the **beginning of each in-game day**, each food/drink stall **lures guests for 3 seconds** (120 game ticks), setting and resetting their hunger/thirst appropriately so the guest will buy (assuming the item is not too expensive for them). This only works on the tile directly in front of a stall, and ignores guests who are unhappy or already have a food or drink item.
 
 ### Known issues
 
 - If you load new stalls into a map using the object selection window, you must save and reload the map before guests will be generated with a preference for the newly-loaded objects. (This refers to food stalls that are not normally obtainable even via research.) (This is probably fixable but not worth the effort?)
 - Occasionally guests get stuck on the corner of a stall and thus don't buy anything, but they'll be safely freed and reset to normal once the luring period ends.
+- This probably doesn't work in multiplayer. I haven't tested that yet.
 
 ## Thanks
 
@@ -21,7 +24,7 @@ Thanks to the entire [OpenRCT2](https://github.com/OpenRCT2/OpenRCT2) team and c
 
 ## Anti-Thanks
 
-No thanks to the tech industry at large that saps my love of software every day with its continual invention of problems in search of a solution. Fuck your hype bubbles.
+No thanks to the tech industry that injures my love of software every day with its continual invention of problems in search of a solution. Screw your hype bubbles.
 
 ## How to develop
 
@@ -51,16 +54,3 @@ Will start a script that will automatically run `npm run build:dev` every time y
 #### `npm test` or `npm run test`
 
 Builds the script in testing mode, which causes the plugin to run all its test functions after the plugin loads. This script then launches OpenRCT2 headlessly into a test map, and exits after tests have completed. **Note:** tests operate on a save game that includes all food stalls except `iced_tea`, with `wonton_soup` about to be researched
-
-### Hot reload
-
-This project supports the [OpenRCT2 hot reload feature](https://github.com/OpenRCT2/OpenRCT2/blob/master/distribution/scripting.md#writing-scripts) for development.
-
-1. Navigate to your OpenRCT2 user directory and open the `config.ini` file.
-2. Enable hot reload by setting `enable_hot_reloading = true` in `config.ini`.
-3. Run `npm start` in the directory of this project to start the hot reload server.
-4. Start the OpenRCT2 and load a save or start a new game.
-5. Each time you save any of the files in `./src/`, the server will compile `./src/plugin.ts` and place the compiled plugin file inside your local OpenRCT2 plugin directory.
-6. OpenRCT2 will notice file changes and it will reload the plugin.
-
-### Fuck Copilot
